@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ AgentShield
+#  AgentShield
 
 ### A checkpoint for AI-generated actions.
 
@@ -22,7 +22,7 @@
 
 ---
 
-## 🧭 The idea in one minute
+##  The idea in one minute
 
 Imagine a new employee with access to your customer database. They follow instructions quickly, which means a convincing note can trick them. You wouldn't hand them every key. You'd have a manager approve each risky move.
 
@@ -35,7 +35,7 @@ Imagine a new employee with access to your customer database. They follow instru
 
 ---
 
-## 🔎 What it catches
+##  What it catches
 
 Each row is a proposal the firewall checks. **Role** is who the AI is acting for. All examples use the demo policy: `reader` can read, `editor` can read and update, `admin` can read, update and delete, and nobody can touch another tenant's data.
 
@@ -96,7 +96,7 @@ Exact denial wording may differ from these descriptions. Run the paste-a-proposa
 
 ---
 
-## 🧪 Business scenarios (illustrations)
+##  Business scenarios (illustrations)
 
 The shipped demo only models support tickets. The same pattern applies wherever an AI can change records. These are **illustrations of the approach**, not shipped integrations.
 
@@ -109,7 +109,7 @@ The shipped demo only models support tickets. The same pattern applies wherever 
 
 ---
 
-## 🚀 Try it in 60 seconds
+##  Try it in 60 seconds
 
 **Requirements:** Python 3.10+ and a terminal. Run these in the **repository root** (where `product_server.py` lives).
 
@@ -181,7 +181,7 @@ These are **synthetic demo endpoints**, not a production authorization service.
 
 ---
 
-## 🐍 Use it from Python
+##  Use it from Python
 
 Install the local package from the repository root:
 
@@ -291,7 +291,7 @@ else:
 > `check_local()` assumes your application has **already verified** the actor's identity and the resource's owner. `check_demo()` accepts only the fictional ticket IDs `1042` and `2042`. Neither is a drop-in production security gateway.
 
 <details>
-<summary><strong>🧪 Run the automated tests</strong></summary>
+<summary><strong> Run the automated tests</strong></summary>
 
 ```bash
 python -m pip install pytest
@@ -310,7 +310,7 @@ Install the full project dependencies from `requirements.txt` for the complete s
 
 ---
 
-## 🧠 How it works
+##  How it works
 
 ```mermaid
 flowchart TD
@@ -422,7 +422,7 @@ agentshield/
 
 ---
 
-## 🌐 Publish a live demo
+##  Publish a live demo
 
 The public demo is intentionally independent of Oracle and OCI secrets.
 
@@ -454,7 +454,7 @@ See [DEPLOY.md](DEPLOY.md) for details. The public container must never contain 
 
 ---
 
-## 🔐 Scope & limitations
+##  Scope & limitations
 
 - A **portfolio/research prototype**, not a security certification or production-ready access-control service.
 - The public demo trusts user-selected roles **only because the data is synthetic**. In production, identity and tenancy must come from a trusted backend.
@@ -464,7 +464,7 @@ See [DEPLOY.md](DEPLOY.md) for details. The public container must never contain 
 - The demo's in-process rate limiting is best-effort, not production abuse control.
 - The business scenarios above are illustrations of the pattern, not shipped integrations.
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - [x] OCI model integration and strict tool proposal parsing
 - [x] Deterministic role and tenant authorization
