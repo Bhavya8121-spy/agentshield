@@ -1,0 +1,12 @@
+.git
+.env
+.oci
+wallet
+**/__pycache__
+**/.pytest_cache
+*.pem
+*.key
+*.p12
+*.sso
+results
+.venv

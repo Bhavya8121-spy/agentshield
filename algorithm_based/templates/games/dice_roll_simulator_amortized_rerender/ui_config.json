@@ -1,0 +1,36 @@
+{
+  "predict_question_template": "At roll step {k} (history size {history_length}), will this roll require more than 2 DOM re-renders?",
+  "predict_options": [
+    {
+      "label": "Yes",
+      "value": true
+    },
+    {
+      "label": "No",
+      "value": false
+    }
+  ],
+  "predict_field": "re_renders_more_than_two",
+  "readout_fields": [
+    {
+      "label": "Roll Step",
+      "field": "k"
+    },
+    {
+      "label": "Latest Roll",
+      "field": "latest_roll"
+    },
+    {
+      "label": "History Size",
+      "field": "history_length"
+    },
+    {
+      "label": "DOM Ops (This Step)",
+      "field": "step_render_ops"
+    },
+    {
+      "label": "Total Cumulative DOM Ops",
+      "field": "total_render_ops"
+    }
+  ]
+}

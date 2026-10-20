@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tetris — Best-Fit Memory Allocation</title>
+    
+    <!-- Retro Pixel Font -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <!-- Classic Game Styles (Keeping this for the tetris canvas itself) -->
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    
+    <style>
+        :root {
+            --bg-color: #050510; /* Deep space blue/black */
+            --panel-border: #4a4a5a;
+            --text-main: #e0e0e0;
+            --neon-green: #39ff14;
+            --neon-blue: #00f3ff;
+            --purple: #b026ff;
+            --orange: #ff7300;
+            --yellow: #ffd700;
+            --red: #ff003c;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            font-family: 'VT323', monospace;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-transform: uppercase;
+        }
+
+        /* Main Grid Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 80px 240px 180px 400px;
+            grid-template-rows: auto 1fr auto;
+            gap: 15px;
+            padding: 20px;
+            background: #000;
+            border: 4px solid var(--panel-border);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* --- Panel Styles --- */
+        .panel {
+            border: 2px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 10px;
+            background: rgba(20, 20, 30, 0.8);
+            position: relative;
+        }
+        
+        .panel-title {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #000;
+            padding: 0 5px;
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+        }
+
+        /* --- Header --- */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid var(--panel-border);
+            padding: 10px 20px;
+        }
+        .header h1 { margin: 0; color: var(--neon-green); font-size: 2rem; letter-spacing: 2px; }
+        .step-counter { color: var(--text-main); border: 2px solid var(--purple); padding: 5px 15px; font-size: 1.5rem; }
+
+        /* --- Left Column: Hold --- */
+        .hold-col { display: flex; flex-direction: column; align-items: center; justify-content: start; padding-top: 20px;}
+        .hold-box { width: 60px; height: 60px; border: 2px solid var(--panel-border); margin-top: 10px;}
+
+        /* --- Mid-Left Column: Tetris Board --- */
+        .board-col { display: flex; justify-content: center; align-items: center; padding: 10px; border: 4px solid var(--panel-border); background: #000;}
+        
+        /* OVERRIDING CLASSIC TETRIS CSS FOR THE DASHBOARD */
+        #info { display: none !important; }
+        #tetris { border: none !important; padding: 0 !important; width: 200px !important; margin: 0;}
+        #canvas { border: none; }
+
+        /* --- Mid-Right Column: Incoming/Status --- */
+        .status-col { display: flex; flex-direction: column; gap: 15px; }
+        .status-col .panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;}
+        
+        .incoming-blocks { display: flex; gap: 2px; margin: 10px 0; }
+        .block-cell { width: 20px; height: 20px; background: var(--neon-blue); border: 1px solid #fff; }
+
+        /* Renders the real tetromino shape (same coords + typeN colors as
+           the actual Tetris canvas), scaled down to fit the side panels */
+        .mini-shape-preview {
+            position: relative;
+            width: 100px;
+            height: 76px;
+            margin: 10px auto 0;
+        }
+        .mini-shape-preview .square {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+        }
+        .incoming-text { font-size: 1.4rem; color: var(--neon-blue); margin-bottom: 5px;}
+        .hint-text { color: var(--yellow); font-size: 1.2rem; line-height: 1.4; text-transform: none;}
+
+        /* --- Right Column: Memory Blocks (Options) --- */
+        .options-col { display: flex; flex-direction: column; gap: 10px; }
+        .instruction-text { font-size: 1.2rem; margin-bottom: 10px; line-height: 1.4;}
+        .instruction-text span { color: var(--yellow); }
+
+        .memory-block {
+            background: #000;
+            border: 2px solid var(--panel-border);
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .memory-block:hover { transform: scale(1.02); border-color: #fff; }
+        
+        /* Dynamic block coloring */
+        .memory-block.color-0 { border-color: var(--neon-green); }
+        .memory-block.color-1 { border-color: var(--purple); }
+        .memory-block.color-2 { border-color: var(--orange); }
+        .memory-block.color-3 { border-color: var(--yellow); }
+
+        .block-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
+        .block-id { font-size: 2rem; font-weight: bold; }
+        .color-0 .block-id, .color-0 .math-highlight { color: var(--neon-green); }
+        .color-1 .block-id, .color-1 .math-highlight { color: var(--purple); }
+        .color-2 .block-id, .color-2 .math-highlight { color: var(--orange); }
+        .color-3 .block-id, .color-3 .math-highlight { color: var(--yellow); }
+
+        /* The visual segments of the memory block */
+        .segment-container { display: flex; gap: 2px; flex: 1; margin: 0 15px; }
+        .segment { width: 15px; height: 25px; border: 1px solid #000; }
+        .color-0 .segment { background: var(--neon-green); }
+        .color-1 .segment { background: var(--purple); }
+        .color-2 .segment { background: var(--orange); }
+        .color-3 .segment { background: var(--yellow); }
+
+        .block-size-label { text-align: right; font-size: 1.2rem; }
+        .block-size-label span { font-size: 1.8rem; display: block; }
+        
+        .block-math { text-align: center; font-size: 1.1rem; color: #aaa; margin-top: 5px;}
+        
+        /* Feedback overlay */
+        #feedback-panel {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 15px;
+            border: 2px solid transparent;
+            display: none;
+        }
+        .feedback.success { display: block; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.1); }
+        .feedback.error { display: block; border-color: var(--red); color: var(--red); background: rgba(255, 0, 60, 0.1); animation: shake 0.3s; }
+
+        /* --- Footer --- */
+        .footer {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 200px 200px;
+            gap: 15px;
+        }
+        .mascot-panel { display: flex; align-items: center; gap: 20px; font-size: 1.2rem; text-transform: none; line-height: 1.5;}
+        .mascot-icon { width: 50px; height: 50px; background: var(--neon-blue); border-radius: 4px; display: flex; justify-content: center; align-items: center; color: #000; font-size: 2rem; font-weight: bold;}
+        .highlight-text { color: var(--neon-blue); }
+        
+        .stats-panel { text-align: center; display: flex; flex-direction: column; justify-content: center;}
+        .stats-panel span { color: var(--neon-blue); font-size: 1.2rem;}
+        .stats-panel strong { color: var(--yellow); font-size: 2.5rem; margin: 5px 0;}
+        
+        .legend-panel { font-size: 1rem; display: flex; flex-direction: column; justify-content: center; gap: 10px;}
+        .legend-item { display: flex; align-items: center; gap: 10px; }
+        .legend-box { width: 15px; height: 15px; border: 1px solid #555; }
+        .legend-box.incoming { background: var(--neon-blue); border-color: #fff;}
+
+        .controls { grid-column: 1 / -1; text-align: center; margin-top: 10px;}
+        button { font-family: 'VT323', monospace; background: var(--neon-blue); color: #000; border: none; padding: 10px 30px; font-size: 1.5rem; cursor: pointer; text-transform: uppercase;}
+        button:disabled { background: #333; color: #777; cursor: not-allowed; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    </style>
+</head>
+<body>
+
+<div class="dashboard" id="main-dashboard" style="display: none;">
+    <!-- HEADER -->
+    <div class="header">
+        <h1 id="game-title">BEST-FIT MEMORY ALLOCATION</h1>
+        <div class="step-counter" id="step-counter">STEP 1/X</div>
+    </div>
+
+    <!-- HOLD COLUMN -->
+    <div class="panel hold-col">
+        <div class="panel-title">HOLD</div>
+        <div class="hold-box"></div>
+    </div>
+
+    <!-- TETRIS BOARD COLUMN -->
+    <div class="board-col">
+        <div id="tetris">
+            <div id="info">
+                <div id="next_shape"></div>
+                <p id="level">Level: <span></span></p>
+                <p id="lines">Lines: <span></span></p>
+                <p id="score">Score: <span></span></p>
+                <p id="time">Time: <span></span></p>
+                <button id="start">Start</button>
+            </div>
+            <div id="canvas"></div>
+        </div>
+    </div>
+
+    <!-- STATUS COLUMN -->
+    <div class="status-col">
+        <div class="panel">
+            <div class="panel-title">NEXT PIECE</div>
+            <!-- Real tetromino preview, kept in sync with the piece that will
+                 actually spawn in the Tetris canvas after this allocation -->
+            <div class="mini-shape-preview" id="next-piece-visual"></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">INCOMING</div>
+            <div class="incoming-text" id="current-piece">I-BLOCK</div>
+            <!-- Real tetromino preview matching the piece frozen in the
+                 Tetris canvas right now (same shape + same color) -->
+            <div class="mini-shape-preview" id="incoming-visual"></div>
+            <div class="incoming-text">SIZE: <span id="piece-size">4</span></div>
+        </div>
+        <div class="panel">
+            <div class="hint-text">
+                Find the block that leaves the SMALLEST leftover space.
+            </div>
+        </div>
+    </div>
+
+    <!-- OPTIONS COLUMN -->
+    <div class="options-col">
+        <div class="panel" style="padding: 15px;">
+            <div class="instruction-text">
+                CLICK THE BLOCK THAT IS THE <span>BEST FIT</span> FOR THE INCOMING PIECE.
+            </div>
+            <div id="memory-container" style="display:flex; flex-direction: column; gap: 10px;">
+                <!-- Blocks injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div id="feedback-panel" class="feedback"></div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button id="next-btn" disabled>NEXT STEP</button>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="panel mascot-panel">
+            <div class="mascot-icon">ツ</div>
+            <div>
+                You are the CPU scheduler!<br>
+                Allocate the incoming process (size <span id="footer-size">4</span>) using the <span class="highlight-text">Best-Fit</span> algorithm.
+            </div>
+        </div>
+        <div class="panel stats-panel">
+            <span>TOTAL FREE MEMORY</span>
+            <strong id="total-memory">0</strong>
+            <span>UNITS</span>
+        </div>
+        <div class="panel legend-panel">
+            <div class="panel-title">LEGEND</div>
+            <div class="legend-item"><div class="legend-box incoming"></div> Incoming Process</div>
+            <div class="legend-item"><div class="legend-box"></div> Free Memory Block</div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="script_bridged.js"></script>
+<script>
+    let traceData = [];
+    let currentStepIndex = 1; 
+    let hasAnsweredCurrent = false;
+
+    const elements = {
+        dashboard: document.getElementById('main-dashboard'),
+        title: document.getElementById('game-title'),
+        stepCounter: document.getElementById('step-counter'),
+        pieceName: document.getElementById('current-piece'),
+        pieceSize: document.getElementById('piece-size'),
+        footerSize: document.getElementById('footer-size'),
+        incomingVisual: document.getElementById('incoming-visual'),
+        nextPieceVisual: document.getElementById('next-piece-visual'),
+        memoryContainer: document.getElementById('memory-container'),
+        feedback: document.getElementById('feedback-panel'),
+        nextBtn: document.getElementById('next-btn'),
+        totalMemory: document.getElementById('total-memory')
+    };
+
+    // NOTE: piece-name -> shape-index mapping lives in ONE place only:
+    // getShapeIndex(), defined at the bottom of this script. It is the
+    // single source of truth used everywhere (spawning in the Tetris
+    // canvas AND rendering the dashboard previews), so the two can never
+    // drift out of sync again.
+
+    // Renders the real tetromino shape (same coordinates + typeN color as
+    // the actual Tetris canvas) into a preview container. This is what
+    // keeps the "INCOMING" / "NEXT PIECE" panels visually identical to
+    // whatever piece is actually spawned/frozen in the canvas.
+    function renderShapePreview(container, shapeIndex) {
+        container.innerHTML = '';
+        const shapes = window.TETRIS_SHAPES;
+        if (!shapes || typeof shapeIndex !== 'number' || !shapes[shapeIndex]) return;
+        const size = 18; // px, matches .mini-shape-preview .square
+        shapes[shapeIndex].forEach(([dx, dy]) => {
+            const sq = document.createElement('div');
+            // Same convention as tetris.drawNextShape(): offset by +2 so
+            // negative shape coordinates don't get clipped off-canvas.
+            sq.className = 'square type' + shapeIndex;
+            sq.style.left = (dx + 2) * size + 'px';
+            sq.style.top = (dy + 2) * size + 'px';
+            container.appendChild(sq);
+        });
+    }
+
+    // Looks ahead to the next checkpoint in the trace to find which piece
+    // will spawn after the current one is allocated (or null if none).
+    function peekNextShapeIndex() {
+        const next = traceData[currentStepIndex + 1];
+        if (next && next.type === 'checkpoint') {
+            return getShapeIndex(next.state.piece);
+        }
+        return null;
+    }
+
+    // 1. URL LOGIC
+    const urlParams = new URLSearchParams(window.location.search);
+    const traceFileName = urlParams.get('trace');
+
+    if (traceFileName) {
+        fetch(traceFileName)
+            .then(response => {
+                if (!response.ok) throw new Error("Could not load trace file");
+                return response.json();
+            })
+            .then(data => {
+                traceData = data;
+                elements.dashboard.style.display = 'grid';
+                initGame();
+            })
+            .catch(err => {
+                console.error(err);
+                document.body.innerHTML = "<h1 style='color:red;'>Error loading trace data.</h1>";
+            });
+    }
+
+    function initGame() {
+        const intro = traceData[0];
+        elements.title.textContent = intro.algorithmName.toUpperCase();
+        
+        // Setup the frozen board using the first step's memory and piece
+        if (window.setupFrozenBoard && traceData[1]) {
+            const firstShapeIdx = getShapeIndex(traceData[1].state.piece);
+            window.setupFrozenBoard(traceData[1].state.memory_before, firstShapeIdx);
+        }
+        
+        elements.nextBtn.addEventListener('click', () => {
+            currentStepIndex++;
+            renderStep();
+        });
+
+        renderStep();
+    }
+
+    function renderStep() {
+        const stepData = traceData[currentStepIndex];
+        
+        if (stepData.type === 'done') {
+            elements.memoryContainer.innerHTML = '<h2 style="text-align:center; color:var(--neon-green);">SIMULATION COMPLETE!</h2>';
+            elements.feedback.className = 'feedback success';
+            elements.feedback.textContent = 'SYSTEM HALTED: TRACE FINISHED.';
+            elements.nextBtn.style.display = 'none';
+            return;
+        }
+
+        const totalSteps = traceData.filter(s => s.type === 'checkpoint').length;
+        elements.stepCounter.textContent = `STEP ${currentStepIndex}/${totalSteps}`;
+
+        hasAnsweredCurrent = false;
+        elements.nextBtn.disabled = true;
+        elements.feedback.className = 'feedback';
+        elements.feedback.style.display = 'none';
+        
+        const state = stepData.state;
+        
+        elements.pieceName.textContent = state.piece.toUpperCase();
+        elements.pieceSize.textContent = state.size;
+        elements.footerSize.textContent = state.size;
+
+        // Draw the actual tetromino shape for the piece that's currently
+        // frozen at the top of the Tetris canvas — same shape, same color.
+        const shapeIdx = getShapeIndex(state.piece);
+        renderShapePreview(elements.incomingVisual, shapeIdx);
+
+        // Draw the piece that will spawn next, so "NEXT PIECE" always
+        // matches what actually appears in the canvas after this drop.
+        const nextIdx = peekNextShapeIndex();
+        if (nextIdx !== null) {
+            renderShapePreview(elements.nextPieceVisual, nextIdx);
+        } else {
+            elements.nextPieceVisual.innerHTML = '';
+        }
+
+        elements.memoryContainer.innerHTML = '';
+        let totalMem = 0;
+
+        state.memory_before.forEach((size, index) => {
+            totalMem += size;
+            
+            // Build the segments for the visual bar
+            let segmentsHTML = '';
+            const maxVisualSegments = Math.min(size, 15); // Cap visuals so it doesn't break layout
+            for(let i=0; i<maxVisualSegments; i++) {
+                segmentsHTML += '<div class="segment"></div>';
+            }
+
+            const remainder = size >= state.size ? size - state.size : 'N/A';
+            const remainderText = remainder !== 'N/A' ? `${remainder} LEFTOVER` : 'DOES NOT FIT';
+
+            const block = document.createElement('div');
+            block.className = `memory-block color-${index % 4}`; // Cycle colors
+            
+            block.innerHTML = `
+                <div class="block-top-row">
+                    <div class="block-id">${index}</div>
+                    <div class="segment-container">${segmentsHTML}</div>
+                    <div class="block-size-label">SIZE<br><span>${size}</span></div>
+                </div>
+                <div class="block-math">${size} - ${state.size} = <span class="math-highlight">${remainderText}</span></div>
+            `;
+            
+            block.addEventListener('click', () => handleBlockClick(index, state.allocated_block_index, block, stepData, state));
+            elements.memoryContainer.appendChild(block);
+        });
+
+        elements.totalMemory.textContent = totalMem;
+    }
+
+   function handleBlockClick(clickedIndex, correctIndex, blockElement, stepData, state) {
+        if (hasAnsweredCurrent) return;
+
+        if (clickedIndex === correctIndex) {
+            hasAnsweredCurrent = true;
+            
+            elements.feedback.className = 'feedback success';
+            elements.feedback.textContent = `>> ACCEPTED: ${stepData.explanationRight.toUpperCase()}`;
+            
+            // 2. THE BRIDGE: Pass the well index, and the shape index of the NEXT piece
+            if (window.animateDropAndSpawn) {
+                // Peek ahead at the next step to figure out what piece to spawn next
+                let nextShapeIdx = 1; // Default fallback
+                if (traceData[currentStepIndex + 1] && traceData[currentStepIndex + 1].type === 'checkpoint') {
+                    nextShapeIdx = getShapeIndex(traceData[currentStepIndex + 1].state.piece);
+                }
+                
+                window.animateDropAndSpawn(state.allocated_block_index, nextShapeIdx);
+            }
+
+            elements.nextBtn.disabled = false;
+        } else {
+            // Flash error
+            elements.feedback.className = 'feedback error';
+            elements.feedback.textContent = `>> REJECTED: ${stepData.explanationWrong.toUpperCase()}`;
+            
+            // Remove animation and trigger reflow to allow repeating it
+            elements.feedback.style.animation = 'none';
+            elements.feedback.offsetHeight; 
+            elements.feedback.style.animation = null;
+        }
+    }
+    // Guarantee the JSON string maps to the exact Tetris shape index
+    // Guarantee the JSON string maps to the exact Tetris shape index
+    function getShapeIndex(pieceName) {
+        // Only look at the very first letter (e.g., the 'T' in 'T-BLOCK')
+        const firstLetter = String(pieceName).toUpperCase().charAt(0);
+        
+        if (firstLetter === "T") return 0;
+        if (firstLetter === "I") return 1;
+        if (firstLetter === "L") return 2;
+        if (firstLetter === "J") return 3;
+        if (firstLetter === "S") return 4;
+        if (firstLetter === "Z") return 5;
+        if (firstLetter === "O") return 6;
+        
+        return 1; // Default to I-Block just in case
+    }
+</script>
+</body>
+</html>

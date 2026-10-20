@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pong — Binary Search Interception</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050510;
+            --panel-border: #4a4a5a;
+            --text-main: #e0e0e0;
+            --neon-green: #39ff14;
+            --neon-blue: #00f3ff;
+            --yellow: #ffd700;
+            --red: #ff003c;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            font-family: 'VT323', monospace;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-transform: uppercase;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 620px 320px;
+            grid-template-rows: auto auto auto;
+            gap: 15px;
+            padding: 20px;
+            background: #000;
+            border: 4px solid var(--panel-border);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .panel {
+            border: 2px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 10px;
+            background: rgba(20, 20, 30, 0.8);
+            position: relative;
+        }
+        .panel-title {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #000;
+            padding: 0 5px;
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid var(--panel-border);
+            padding: 10px 20px;
+        }
+        .header h1 { margin: 0; color: var(--neon-green); font-size: 2rem; letter-spacing: 2px; }
+        .step-counter { color: var(--text-main); border: 2px solid var(--yellow); padding: 5px 15px; font-size: 1.5rem; }
+
+        .board-col { display: flex; justify-content: center; align-items: center; padding: 10px; }
+        #pong-canvas { border: 2px solid var(--panel-border); background: #000; width: 100%; max-width: 580px; height: auto; }
+
+        .side-col { display: flex; flex-direction: column; gap: 15px; }
+
+        .bounds-row { display: flex; justify-content: space-between; font-size: 1.4rem; margin-top: 15px; }
+        .bounds-row span { color: var(--neon-blue); }
+        .bounds-row strong { color: var(--yellow); font-size: 1.8rem; }
+
+        .question-text { font-size: 1.3rem; line-height: 1.4; margin-top: 15px; margin-bottom: 15px; text-transform: none; }
+        .question-text .frame-num { color: var(--yellow); font-weight: bold; }
+
+        .predict-buttons { display: flex; flex-direction: column; gap: 10px; }
+        button.predict-btn {
+            font-family: 'VT323', monospace;
+            background: #111;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 14px 10px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        button.predict-btn:hover:not(:disabled) { background: var(--neon-blue); color: #000; }
+        button.predict-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        #feedback-panel {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 1.3rem;
+            padding: 15px;
+            border: 2px solid transparent;
+            display: none;
+            text-transform: none;
+        }
+        .feedback.success { display: block; border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.1); }
+        .feedback.error { display: block; border-color: var(--red); color: var(--red); background: rgba(255, 0, 60, 0.1); animation: shake 0.3s; }
+
+        .controls { grid-column: 1 / -1; text-align: center; }
+        #next-btn {
+            font-family: 'VT323', monospace;
+            background: var(--neon-blue);
+            color: #000;
+            border: none;
+            padding: 10px 30px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        #next-btn:disabled { background: #333; color: #777; cursor: not-allowed; }
+
+        .rules-text { font-size: 1.1rem; line-height: 1.4; text-transform: none; color: #aaa; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+    </style>
+</head>
+<body>
+
+<div class="dashboard" id="main-dashboard" style="display: none;">
+    <div class="header">
+        <h1 id="game-title">BINARY SEARCH INTERCEPTION</h1>
+        <div class="step-counter" id="step-counter">STEP 1/X</div>
+    </div>
+
+    <div class="panel board-col">
+        <div class="panel-title">LIVE COURT</div>
+        <canvas id="pong-canvas" width="600" height="400"></canvas>
+    </div>
+
+    <div class="side-col">
+        <div class="panel">
+            <div class="panel-title">RULES</div>
+            <div class="rules-text" id="rules-text"></div>
+        </div>
+
+        <div class="panel" id="predict-panel">
+            <div class="panel-title">PREDICT</div>
+            <div class="question-text" id="question-text"></div>
+            <div class="bounds-row">
+                <span>LO: <strong id="bound-lo">0</strong></span>
+                <span>MID: <strong id="bound-mid">0</strong></span>
+                <span>HI: <strong id="bound-hi">0</strong></span>
+            </div>
+            <div class="predict-buttons">
+                <button class="predict-btn" id="btn-past">ALREADY PAST THE LINE</button>
+                <button class="predict-btn" id="btn-not-yet">NOT THERE YET</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-panel" class="feedback"></div>
+
+    <div class="controls">
+        <button id="next-btn" disabled>NEXT STEP</button>
+    </div>
+</div>
+
+<script type="text/javascript" src="script_bridged.js"></script>
+<script>
+    let traceData = [];
+    let currentStepIndex = 1;
+    let hasAnsweredCurrent = false;
+
+    const els = {
+        dashboard: document.getElementById('main-dashboard'),
+        title: document.getElementById('game-title'),
+        stepCounter: document.getElementById('step-counter'),
+        rulesText: document.getElementById('rules-text'),
+        questionText: document.getElementById('question-text'),
+        boundLo: document.getElementById('bound-lo'),
+        boundMid: document.getElementById('bound-mid'),
+        boundHi: document.getElementById('bound-hi'),
+        predictPanel: document.getElementById('predict-panel'),
+        btnPast: document.getElementById('btn-past'),
+        btnNotYet: document.getElementById('btn-not-yet'),
+        feedback: document.getElementById('feedback-panel'),
+        nextBtn: document.getElementById('next-btn'),
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const traceFileName = urlParams.get('trace');
+
+    if (traceFileName) {
+        fetch(traceFileName)
+            .then(r => {
+                if (!r.ok) throw new Error("Could not load trace file");
+                return r.json();
+            })
+            .then(data => {
+                traceData = data;
+                els.dashboard.style.display = 'grid';
+                initGame();
+            })
+            .catch(err => {
+                console.error(err);
+                document.body.innerHTML = "<h1 style='color:red;'>Error loading trace data.</h1>";
+            });
+    }
+
+    function initGame() {
+        const intro = traceData[0];
+        els.title.textContent = intro.algorithmName.toUpperCase();
+        els.rulesText.textContent = intro.rules;
+
+        window.setupPongScene(intro.ball, intro.board, intro.paddleX);
+
+        els.btnPast.addEventListener('click', () => handleAnswer(true));
+        els.btnNotYet.addEventListener('click', () => handleAnswer(false));
+        els.nextBtn.addEventListener('click', () => {
+            currentStepIndex++;
+            renderStep();
+        });
+
+        renderStep();
+    }
+
+    function renderStep() {
+        const stepData = traceData[currentStepIndex];
+
+        if (stepData.type === 'done') {
+            finishSimulation(stepData);
+            return;
+        }
+
+        const totalSteps = traceData.filter(s => s.type === 'checkpoint').length;
+        els.stepCounter.textContent = `STEP ${currentStepIndex}/${totalSteps}`;
+
+        hasAnsweredCurrent = false;
+        els.nextBtn.disabled = true;
+        els.feedback.className = 'feedback';
+        els.feedback.style.display = 'none';
+        els.btnPast.disabled = false;
+        els.btnNotYet.disabled = false;
+        els.predictPanel.style.opacity = '1';
+
+        const state = stepData.state;
+        els.boundLo.textContent = state.lo;
+        els.boundMid.textContent = state.mid;
+        els.boundHi.textContent = state.hi;
+
+        els.questionText.innerHTML =
+            `At frame <span class="frame-num">${state.mid}</span>, has the ball already ` +
+            `reached the paddle's x-line (x=${state.paddleX})?`;
+
+        window.showGhost(state.mid, state.xAtMid, state.yAtMid);
+
+        currentCheckpoint = stepData;
+    }
+
+    let currentCheckpoint = null;
+
+    function handleAnswer(guessPast) {
+        if (hasAnsweredCurrent) return;
+        hasAnsweredCurrent = true;
+        els.btnPast.disabled = true;
+        els.btnNotYet.disabled = true;
+
+        const state = currentCheckpoint.state;
+        const correct = guessPast === state.predicateTrue;
+
+        window.revealGhost(state.predicateTrue);
+
+        if (correct) {
+            els.feedback.className = 'feedback success';
+            els.feedback.textContent = `>> CORRECT: ${currentCheckpoint.explanationRight.toUpperCase()}`;
+        } else {
+            els.feedback.className = 'feedback error';
+            els.feedback.textContent = `>> NOT QUITE: ${currentCheckpoint.explanationWrong.toUpperCase()}`;
+        }
+        els.feedback.style.display = 'block';
+
+        els.nextBtn.disabled = false;
+    }
+
+    function finishSimulation(doneStep) {
+        els.predictPanel.style.opacity = '0.4';
+        els.btnPast.disabled = true;
+        els.btnNotYet.disabled = true;
+        els.nextBtn.style.display = 'none';
+
+        const state = doneStep.state;
+        const totalSteps = traceData.filter(s => s.type === 'checkpoint').length;
+        els.stepCounter.textContent = `STEP ${totalSteps}/${totalSteps}`;
+
+        if (!state.intercepted) {
+            window.showNoInterception();
+            els.feedback.className = 'feedback error';
+            els.feedback.textContent = '>> SEARCH EXHAUSTED: NO INTERCEPTION FOUND WITHIN THE HORIZON.';
+            els.feedback.style.display = 'block';
+            return;
+        }
+
+        els.feedback.className = 'feedback success';
+        els.feedback.textContent = `>> BINARY SEARCH CONVERGED ON FRAME ${state.intercept_frame}. WATCH THE REAL BALL FLY THERE...`;
+        els.feedback.style.display = 'block';
+
+        window.playInterceptionAnimation(
+            state.ball, state.board, state.paddleX,
+            state.intercept_frame, state.predicted_y,
+            () => {
+                els.feedback.textContent =
+                    `>> INTERCEPTED AT FRAME ${state.intercept_frame}, Y=${Math.round(state.predicted_y)}. ` +
+                    `SIMULATION COMPLETE.`;
+            }
+        );
+    }
+</script>
+</body>
+</html>

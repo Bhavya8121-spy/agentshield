@@ -1,0 +1,477 @@
+@import url("https://fonts.googleapis.com/css?family=Press+Start+2P");
+
+body {
+  margin: 0;
+  font-family: "Press Start 2P", cursive;
+  font-size: 2em;
+  color: white;
+  background-color: #0f172a; /* Prevents the blinding white screen */
+}
+button {
+  outline: none;
+  cursor: pointer;
+  border: none;
+  box-shadow: 3px 5px 0px 0px rgba(0, 0, 0, 0.75);
+}
+
+#counter {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+#counter.hidden {
+  display: none;
+}
+
+/* ==========================================
+   SHARED FULL-SCREEN OVERLAY SYSTEM
+   Every screen (username, rules, question, crash, win, scoreboard)
+   uses this same shell so the game has one consistent visual language.
+   ========================================== */
+.overlay-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.overlay-screen.hidden {
+  display: none;
+}
+
+.overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 700px;
+}
+
+.overlay-title {
+  color: #06b6d4;
+  margin-bottom: 20px;
+  font-size: 24px;
+  line-height: 1.5;
+  font-family: "Press Start 2P", cursive;
+}
+
+.overlay-text {
+  color: #f8fafc;
+  font-size: 12px;
+  margin-bottom: 20px;
+  line-height: 1.8;
+  max-width: 650px;
+  font-family: monospace;
+}
+
+.primary-btn {
+  padding: 15px 30px;
+  background: #06b6d4;
+  color: #0f172a;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: monospace;
+  font-weight: bold;
+  margin-top: 10px;
+}
+.primary-btn:disabled {
+  background: #334155;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  padding: 15px 30px;
+  background: transparent;
+  color: #f8fafc;
+  border: 2px solid #334155;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: monospace;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+/* ---- Username screen ---- */
+.field-label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-family: monospace;
+  margin-bottom: 10px;
+}
+.text-input {
+  padding: 12px 15px;
+  font-size: 16px;
+  font-family: monospace;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: white;
+  width: 260px;
+  margin-bottom: 15px;
+}
+.text-input:focus {
+  outline: none;
+  border-color: #06b6d4;
+}
+
+/* ---- Algorithm select screen ---- */
+.algorithm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 500px;
+  font-family: monospace;
+}
+.algorithm-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 8px;
+  padding: 18px 20px;
+  background: #1e293b;
+  color: white;
+  border: 2px solid #334155;
+  cursor: pointer;
+  font-family: monospace;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.algorithm-card:hover {
+  border-color: #06b6d4;
+  transform: translateY(-1px);
+}
+.algorithm-card-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #06b6d4;
+}
+.algorithm-card-desc {
+  font-size: 11px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+.algorithm-card-meta {
+  font-size: 10px;
+  color: #64748b;
+}
+.algorithm-list-error {
+  color: #ef4444;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+/* ---- Rules screen ---- */
+.rules-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 25px 0;
+  text-align: left;
+  color: #f8fafc;
+  font-size: 12px;
+  font-family: monospace;
+  line-height: 2;
+  max-width: 550px;
+}
+#rulesCountdownText {
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+/* ==========================================
+   QUESTION CARD (one per road)
+   ========================================== */
+.progress-label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-family: monospace;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+#timerBarTrack {
+  width: 100%;
+  max-width: 450px;
+  height: 8px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+#timerBarFill {
+  height: 100%;
+  width: 100%;
+  background: #10b981;
+  transition: width 0.1s linear, background-color 0.3s ease;
+}
+#timerBarFill.timer-warning {
+  background: #f59e0b;
+}
+#timerBarFill.timer-danger {
+  background: #ef4444;
+}
+
+#lessonTitle {
+  color: #06b6d4;
+  margin-bottom: 20px;
+  font-size: 22px;
+  line-height: 1.5;
+  font-family: "Press Start 2P", cursive;
+}
+
+#lessonDescription {
+  color: #f8fafc;
+  font-size: 12px;
+  margin-bottom: 30px;
+  line-height: 1.8;
+  max-width: 650px;
+  font-family: monospace;
+}
+
+#lessonOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 450px;
+  font-family: monospace;
+}
+
+#lessonOptions button {
+  padding: 15px;
+  background: #1e293b;
+  color: white;
+  border: 2px solid #334155;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: monospace;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+#lessonOptions button:hover {
+  border-color: #06b6d4;
+  transform: translateY(-1px);
+}
+
+#lessonOptions button.correct-flash {
+  border-color: #10b981;
+  background: #064e3b;
+}
+
+#lessonOptions button.wrong-flash {
+  border-color: #ef4444;
+  animation: shake 0.3s;
+}
+
+#lessonOptions button.disabled-option {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+#quizFeedback {
+  font-size: 12px;
+  margin-top: 30px;
+  min-height: 40px;
+  max-width: 600px;
+  line-height: 1.5;
+  font-family: monospace;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ---- Small correct-answer pulse (per question) ---- */
+#winAnimation {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+#winAnimation.hidden {
+  display: none;
+}
+#winCheck {
+  width: 100px;
+  height: 100px;
+}
+.win-check-circle {
+  fill: none;
+  stroke: #10b981;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  animation: draw-circle 0.4s ease forwards;
+}
+.win-check-mark {
+  fill: none;
+  stroke: #10b981;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: draw-mark 0.3s ease forwards 0.35s;
+}
+@keyframes draw-circle {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes draw-mark {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ==========================================
+   CRASH SCREEN
+   ========================================== */
+.crash-title {
+  color: #ef4444;
+}
+.score-summary {
+  display: flex;
+  gap: 40px;
+  margin: 10px 0 25px 0;
+  font-family: monospace;
+}
+.score-summary > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.score-label {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.score-value {
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* Full-screen red impact flash + shake, triggered on crash */
+@keyframes impact-flash-anim {
+  0% { background-color: rgba(239, 68, 68, 0); }
+  15% { background-color: rgba(239, 68, 68, 0.55); }
+  100% { background-color: rgba(239, 68, 68, 0); }
+}
+@keyframes impact-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-10px, 4px); }
+  40% { transform: translate(8px, -6px); }
+  60% { transform: translate(-6px, 6px); }
+  80% { transform: translate(6px, -3px); }
+}
+body.impact-flash::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  pointer-events: none;
+  animation: impact-flash-anim 0.4s ease-out;
+}
+body.impact-flash {
+  animation: impact-shake 0.4s ease-out;
+}
+
+/* ==========================================
+   WIN SCREEN
+   ========================================== */
+.win-title {
+  color: #10b981;
+}
+#winConfettiField {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(110vh) rotate(540deg);
+    opacity: 0;
+  }
+}
+
+/* ==========================================
+   SCOREBOARD
+   ========================================== */
+#scoreboardYourResult {
+  color: #10b981;
+}
+.scoreboard-list {
+  list-style: none;
+  counter-reset: rank;
+  padding: 0;
+  margin: 0 0 25px 0;
+  width: 100%;
+  max-width: 420px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.scoreboard-list li {
+  counter-increment: rank;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #334155;
+  color: #f8fafc;
+}
+.scoreboard-list li::before {
+  content: counter(rank) ".";
+  color: #06b6d4;
+  margin-right: 10px;
+  min-width: 22px;
+  text-align: left;
+}
+.scoreboard-list li.you {
+  background: #0f2e2a;
+  color: #10b981;
+}
+.scoreboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.game-top-bar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 1100;
+}
+.small-btn {
+  padding: 8px 14px;
+  font-size: 10px;
+  margin-top: 0;
+  margin-left: 0;
+}

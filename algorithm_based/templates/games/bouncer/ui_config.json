@@ -1,0 +1,9 @@
+{
+  "title": "Bouncer -- ID Check",
+  "rules": "Check each ID. Reject anyone underage, expired, or already let in tonight -- otherwise, let them in. Three wrong calls and your shift ends.",
+  "legal_age": 21,
+  "actions": [
+    { "label": "Let them in", "value": "accept" },
+    { "label": "Turn them away", "value": "reject" }
+  ]
+}

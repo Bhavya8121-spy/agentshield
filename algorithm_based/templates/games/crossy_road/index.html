@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Talha - Crossy Road: AI Quiz Run</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="https://i.ibb.co/M6KTWnf/pic.jpg" />
+  </head>
+  <body>
+    <!-- ============ 1. USERNAME ENTRY ============ -->
+    <div id="usernameScreen" class="overlay-screen">
+      <div class="overlay-card">
+        <h2 class="overlay-title">Crossy Road:<br>AI Quiz Run</h2>
+        <p class="overlay-text">
+          A row of roads stands between you and home. Every road asks you an
+          algorithm question with four options. Pick right, and you cross
+          safely. Pick wrong &mdash; or run out of time &mdash; and you get hit.
+        </p>
+        <label class="field-label" for="usernameInput">Enter your name to begin</label>
+        <input id="usernameInput" class="text-input" type="text" maxlength="18" placeholder="Your name" autocomplete="off" />
+        <button id="usernameStartBtn" class="primary-btn" disabled>Start</button>
+      </div>
+    </div>
+
+    <!-- ============ 2. ALGORITHM SELECT ============ -->
+    <!-- Populated entirely from data/algorithms/index.json + per-algorithm JSON
+         files at runtime. Adding a new algorithm lesson never requires editing
+         this markup -- just drop a new JSON file and list it in index.json. -->
+    <div id="algorithmSelectScreen" class="overlay-screen hidden">
+      <div class="overlay-card">
+        <h2 class="overlay-title">Choose a Lesson</h2>
+        <p class="overlay-text">Each lesson is its own algorithm, loaded from JSON. Pick one to start crossing.</p>
+        <div id="algorithmList" class="algorithm-list">
+          <p class="overlay-text">Loading lessons…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 3. RULES (auto-advances after 5s) ============ -->
+    <div id="rulesScreen" class="overlay-screen hidden">
+      <div class="overlay-card">
+        <h2 class="overlay-title">How to Play</h2>
+        <ul class="rules-list">
+          <li>🛣️ Each road = one multiple-choice question.</li>
+          <li>✅ Correct answer &rarr; the chicken crosses safely.</li>
+          <li>💥 Wrong answer (or the timer running out) &rarr; you get hit and the run ends.</li>
+          <li>⏱️ You have <strong id="rulesTimeLimit">15 seconds</strong> per question.</li>
+          <li>🏁 Answer all <strong id="rulesQuestionCount">10</strong> questions correctly to make it home.</li>
+        </ul>
+        <p class="overlay-text" id="rulesCountdownText">Starting in 5…</p>
+      </div>
+    </div>
+
+    <!-- ============ 4. QUESTION CARD (one per road) ============ -->
+    <div id="startupLesson" class="overlay-screen hidden">
+      <div id="gameTopBar" class="game-top-bar">
+        <button id="quitBtn" class="secondary-btn small-btn">Quit to Menu</button>
+        <button id="viewScoreboardBtn" class="secondary-btn small-btn">Scoreboard</button>
+      </div>
+      <div id="lessonCard" class="overlay-card">
+        <p id="lessonProgress" class="progress-label"></p>
+        <div id="timerBarTrack">
+          <div id="timerBarFill"></div>
+        </div>
+        <h2 id="lessonTitle"></h2>
+        <p id="lessonDescription"></p>
+        <div id="lessonOptions"></div>
+        <p id="quizFeedback"></p>
+      </div>
+
+      <!-- Small correctness pulse shown briefly right after a correct pick -->
+      <div id="winAnimation" class="hidden">
+        <svg id="winCheck" viewBox="0 0 100 100">
+          <circle class="win-check-circle" cx="50" cy="50" r="45" />
+          <path class="win-check-mark" d="M25,52 L42,68 L75,30" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- ============ 4. CRASH / GAME OVER ============ -->
+    <div id="crashScreen" class="overlay-screen hidden">
+      <div class="overlay-card">
+        <h2 class="overlay-title crash-title">💥 You Got Hit!</h2>
+        <p id="crashExplanation" class="overlay-text"></p>
+        <div class="score-summary">
+          <div><span class="score-label">Roads crossed</span><span id="crashRoads" class="score-value"></span></div>
+          <div><span class="score-label">Final score</span><span id="crashScore" class="score-value"></span></div>
+        </div>
+        <button id="retryBtn" class="primary-btn">Try Again</button>
+        <button id="crashChooseAnotherBtn" class="secondary-btn">Choose Another Lesson</button>
+      </div>
+    </div>
+
+    <!-- ============ 5. WIN (reached destination) ============ -->
+    <div id="winScreen" class="overlay-screen hidden">
+      <div class="overlay-card">
+        <h2 class="overlay-title win-title">🏆 You Made It Home!</h2>
+        <p class="overlay-text">Every road crossed safely. Great work!</p>
+        <div id="winConfettiField"></div>
+      </div>
+    </div>
+
+    <!-- ============ 6. SCOREBOARD ============ -->
+    <div id="scoreboardScreen" class="overlay-screen hidden">
+      <div class="overlay-card">
+        <h2 class="overlay-title">Scoreboard</h2>
+        <p id="scoreboardYourResult" class="overlay-text"></p>
+        <ol id="scoreboardList" class="scoreboard-list"></ol>
+        <div class="scoreboard-actions">
+          <button id="playAgainBtn" class="primary-btn">Play Again</button>
+          <button id="chooseAnotherBtn" class="secondary-btn">Choose Another Lesson</button>
+          <button id="newPlayerBtn" class="secondary-btn">New Player</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="counter" class="hidden">0</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

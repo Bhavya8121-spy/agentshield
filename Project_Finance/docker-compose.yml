@@ -1,0 +1,17 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      FF_LOG_LEVEL: INFO
+      FF_ANALYTICS_ENABLED: "true"
+      FF_SESSION_TTL_MINUTES: "180"
+    volumes:
+      - analytics:/app/data/analytics
+      - feedback:/app/data/feedback
+    restart: unless-stopped
+
+volumes:
+  analytics:
+  feedback:

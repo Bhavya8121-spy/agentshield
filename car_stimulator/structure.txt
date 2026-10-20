@@ -1,0 +1,96 @@
+.
+├── README.md
+├── assets
+│   ├── buildings.png
+│   ├── driver_car.png
+│   ├── side_car.png
+│   └── trees.png
+├── boulevard_racer.html
+├── boulevard_racer.py
+├── car.py
+├── models
+│   ├── car_kit
+│   │   ├── Textures
+│   │   │   └── colormap.png
+│   │   ├── sedan-sports.glb
+│   │   └── taxi.glb
+│   └── city_kit
+│       ├── Textures
+│       │   └── colormap.png
+│       ├── bridge-pillar-wide.glb
+│       ├── bridge-pillar.glb
+│       ├── building-type-e.glb
+│       ├── building-type-f.glb
+│       ├── building-type-g.glb
+│       ├── building-type-h.glb
+│       ├── building-type-i.glb
+│       ├── construction-barrier.glb
+│       ├── construction-cone.glb
+│       ├── construction-light.glb
+│       ├── light-curved-cross.glb
+│       ├── light-curved-double.glb
+│       ├── light-curved.glb
+│       ├── light-square-cross.glb
+│       ├── light-square-double.glb
+│       ├── light-square.glb
+│       ├── road-bend-barrier.glb
+│       ├── road-bend-sidewalk.glb
+│       ├── road-bend-square-barrier.glb
+│       ├── road-bend-square.glb
+│       ├── road-bend.glb
+│       ├── road-bridge.glb
+│       ├── road-crossing.glb
+│       ├── road-crossroad-barrier.glb
+│       ├── road-crossroad-line.glb
+│       ├── road-crossroad-path.glb
+│       ├── road-crossroad.glb
+│       ├── road-curve-barrier.glb
+│       ├── road-curve-intersection-barrier.glb
+│       ├── road-curve-intersection.glb
+│       ├── road-curve-pavement.glb
+│       ├── road-curve.glb
+│       ├── road-driveway-double-barrier.glb
+│       ├── road-driveway-double.glb
+│       ├── road-driveway-single-barrier.glb
+│       ├── road-driveway-single.glb
+│       ├── road-end-barrier.glb
+│       ├── road-end-round-barrier.glb
+│       ├── road-end-round.glb
+│       ├── road-end.glb
+│       ├── road-intersection-barrier.glb
+│       ├── road-intersection-line.glb
+│       ├── road-intersection-path.glb
+│       ├── road-intersection.glb
+│       ├── road-roundabout-barrier.glb
+│       ├── road-roundabout.glb
+│       ├── road-side-barrier.glb
+│       ├── road-side-entry-barrier.glb
+│       ├── road-side-entry.glb
+│       ├── road-side-exit-barrier.glb
+│       ├── road-side-exit.glb
+│       ├── road-side.glb
+│       ├── road-slant-barrier.glb
+│       ├── road-slant-curve-barrier.glb
+│       ├── road-slant-curve.glb
+│       ├── road-slant-flat-curve.glb
+│       ├── road-slant-flat-high.glb
+│       ├── road-slant-flat.glb
+│       ├── road-slant-high-barrier.glb
+│       ├── road-slant-high.glb
+│       ├── road-slant.glb
+│       ├── road-split-barrier.glb
+│       ├── road-split.glb
+│       ├── road-square-barrier.glb
+│       ├── road-square.glb
+│       ├── road-straight-barrier-end.glb
+│       ├── road-straight-barrier-half.glb
+│       ├── road-straight-barrier.glb
+│       ├── road-straight-half.glb
+│       ├── road-straight.glb
+│       ├── sign-highway-detailed.glb
+│       ├── sign-highway-wide.glb
+│       └── sign-highway.glb
+├── requirements.txt
+└── structure.txt
+
+7 directories, 87 files

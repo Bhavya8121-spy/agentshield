@@ -1,0 +1,133 @@
+[
+  {
+    "name": "two_by_two_grid_path",
+    "inputs": {
+      "grid": [
+        [
+          "0",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ]
+      ],
+      "start": [
+        0,
+        0
+      ],
+      "goal": [
+        1,
+        1
+      ]
+    },
+    "expected_output": [
+      {
+        "type": "checkpoint",
+        "state": {
+          "step_idx": 1,
+          "row": 0,
+          "col": 0,
+          "g": 0,
+          "h": 2,
+          "f": 2,
+          "is_goal": false,
+          "visited_count": 1
+        },
+        "explanationRight": "Correct! Node (0, 0) is not the goal node.",
+        "explanationWrong": "Incorrect. Node (0, 0) is not the goal node."
+      },
+      {
+        "type": "checkpoint",
+        "state": {
+          "step_idx": 2,
+          "row": 0,
+          "col": 1,
+          "g": 1,
+          "h": 1,
+          "f": 2,
+          "is_goal": false,
+          "visited_count": 2
+        },
+        "explanationRight": "Correct! Node (0, 1) is not the goal node.",
+        "explanationWrong": "Incorrect. Node (0, 1) is not the goal node."
+      },
+      {
+        "type": "checkpoint",
+        "state": {
+          "step_idx": 3,
+          "row": 1,
+          "col": 1,
+          "g": 2,
+          "h": 0,
+          "f": 2,
+          "is_goal": true,
+          "visited_count": 3
+        },
+        "explanationRight": "Correct! Node (1, 1) is the goal node.",
+        "explanationWrong": "Incorrect. Node (1, 1) is indeed the goal node."
+      },
+      {
+        "type": "done",
+        "state": {
+          "step_idx": 3,
+          "row": 1,
+          "col": 1,
+          "g": 2,
+          "h": 0,
+          "f": 2,
+          "is_goal": true,
+          "visited_count": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "single_cell_start_is_goal",
+    "inputs": {
+      "grid": [
+        [
+          "0"
+        ]
+      ],
+      "start": [
+        0,
+        0
+      ],
+      "goal": [
+        0,
+        0
+      ]
+    },
+    "expected_output": [
+      {
+        "type": "checkpoint",
+        "state": {
+          "step_idx": 1,
+          "row": 0,
+          "col": 0,
+          "g": 0,
+          "h": 0,
+          "f": 0,
+          "is_goal": true,
+          "visited_count": 1
+        },
+        "explanationRight": "Correct! Node (0, 0) is the goal node.",
+        "explanationWrong": "Incorrect. Node (0, 0) is indeed the goal node."
+      },
+      {
+        "type": "done",
+        "state": {
+          "step_idx": 1,
+          "row": 0,
+          "col": 0,
+          "g": 0,
+          "h": 0,
+          "f": 0,
+          "is_goal": true,
+          "visited_count": 1
+        }
+      }
+    ]
+  }
+]

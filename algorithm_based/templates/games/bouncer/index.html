@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Concept Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050510;
+            --panel-border: #4a4a5a;
+            --text-main: #e0e0e0;
+            --neon-green: #39ff14;
+            --neon-blue: #00f3ff;
+            --yellow: #ffd700;
+            --red: #ff003c;
+        }
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            font-family: 'VT323', monospace;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-transform: uppercase;
+        }
+        .arcade {
+            display: grid;
+            grid-template-columns: 620px 320px;
+            grid-template-rows: auto auto;
+            gap: 15px;
+            padding: 20px;
+            background: #000;
+            border: 4px solid var(--panel-border);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .panel {
+            border: 2px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 10px;
+            background: rgba(20, 20, 30, 0.8);
+            position: relative;
+        }
+        .panel-title {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #000;
+            padding: 0 5px;
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+        }
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid var(--panel-border);
+            padding: 10px 20px;
+        }
+        .header h1 { margin: 0; color: var(--neon-green); font-size: 2rem; letter-spacing: 2px; }
+        .stat-row { display: flex; gap: 20px; }
+        .stat { color: var(--text-main); border: 2px solid var(--yellow); padding: 5px 15px; font-size: 1.5rem; }
+        .stat.streak { border-color: var(--neon-green); }
+        .board-col { display: flex; justify-content: center; align-items: center; padding: 10px; }
+        #scene-canvas { border: 2px solid var(--panel-border); background: #000; width: 100%; max-width: 580px; height: auto; }
+        .side-col { display: flex; flex-direction: column; gap: 15px; }
+        .rules-text { font-size: 1.1rem; line-height: 1.4; text-transform: none; color: #aaa; }
+        .action-buttons { display: flex; flex-direction: column; gap: 10px; }
+        button.action-btn {
+            font-family: 'VT323', monospace;
+            background: #111;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 16px 10px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.1s, transform 0.1s;
+        }
+        button.action-btn:hover:not(:disabled) { background: var(--neon-blue); color: #000; }
+        button.action-btn:active:not(:disabled) { transform: scale(0.96); }
+        button.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        #flash-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        #flash-overlay.correct { background: rgba(57, 255, 20, 0.18); opacity: 1; }
+        #flash-overlay.wrong { background: rgba(255, 0, 60, 0.22); opacity: 1; }
+        #round-explanation {
+            min-height: 1.4rem;
+            font-size: 1.1rem;
+            text-transform: none;
+            color: var(--text-main);
+        }
+        #game-over-panel {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            border: 2px solid var(--red);
+            background: rgba(255, 0, 60, 0.08);
+            display: none;
+        }
+        #game-over-panel h2 { color: var(--red); margin: 0 0 10px; }
+        #game-over-panel p { text-transform: none; font-size: 1.2rem; color: var(--text-main); }
+        #restart-btn {
+            font-family: 'VT323', monospace;
+            background: var(--neon-green);
+            color: #000;
+            border: none;
+            padding: 10px 30px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="arcade" id="main-arcade" style="display: none;">
+    <div class="header">
+        <h1 id="game-title">CONCEPT GAME</h1>
+        <div class="stat-row">
+            <div class="stat streak" id="streak-stat">STREAK 0</div>
+            <div class="stat" id="score-stat">SCORE 0</div>
+        </div>
+    </div>
+
+    <div class="panel board-col" style="position: relative;">
+        <div class="panel-title">LIVE SCENE</div>
+        <canvas id="scene-canvas" width="600" height="400"></canvas>
+        <div id="flash-overlay"></div>
+    </div>
+
+    <div class="side-col">
+        <div class="panel">
+            <div class="panel-title">RULES</div>
+            <div class="rules-text" id="rules-text"></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">CALL IT</div>
+            <div id="round-explanation"></div>
+            <div class="action-buttons" id="action-buttons" style="margin-top: 12px;"></div>
+        </div>
+    </div>
+
+    <div id="game-over-panel">
+        <h2>SHIFT OVER</h2>
+        <p id="game-over-summary"></p>
+        <button id="restart-btn">RUN IT BACK</button>
+    </div>
+</div>
+
+<!-- Bridge contract for arcade (live, endless) games -- differs from the
+     trace-based _dashboard_scaffold.html contract:
+       window.setupScene(config)
+       window.generateCustomer(difficultyState) -> plain object, client-authoritative
+       window.renderCustomer(customer)
+       window.resolveRound(customer, result)   // result is the /api/evaluate response
+       window.clearScene()
+-->
+<script type="text/javascript" src="script_bridged.js"></script>
+<script>
+    const MISTAKES_ALLOWED = 3;
+    const ROUND_ADVANCE_DELAY_MS = 550;
+
+    let uiConfig = null;
+    let algoKey = null;
+    let streak = 0;
+    let bestStreak = 0;
+    let score = 0;
+    let mistakes = 0;
+    let roundsCleared = 0;
+    let currentCustomer = null;
+    let awaitingAnswer = false;
+
+    const els = {
+        arcade: document.getElementById('main-arcade'),
+        title: document.getElementById('game-title'),
+        rulesText: document.getElementById('rules-text'),
+        actionButtons: document.getElementById('action-buttons'),
+        streakStat: document.getElementById('streak-stat'),
+        scoreStat: document.getElementById('score-stat'),
+        flashOverlay: document.getElementById('flash-overlay'),
+        roundExplanation: document.getElementById('round-explanation'),
+        gameOverPanel: document.getElementById('game-over-panel'),
+        gameOverSummary: document.getElementById('game-over-summary'),
+        restartBtn: document.getElementById('restart-btn'),
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    algoKey = urlParams.get('algo');
+
+    if (algoKey) {
+        fetch('ui_config.json')
+            .then(r => { if (!r.ok) throw new Error('ui_config load failed'); return r.json(); })
+            .then(config => {
+                uiConfig = config;
+                els.arcade.style.display = 'grid';
+                initGame();
+            })
+            .catch(err => {
+                console.error(err);
+                document.body.innerHTML = "<h1 style='color:red;'>Error loading game config.</h1>";
+            });
+    }
+
+    function initGame() {
+        els.title.textContent = (uiConfig.title || 'Concept Game').toUpperCase();
+        els.rulesText.textContent = uiConfig.rules || '';
+
+        els.actionButtons.innerHTML = '';
+        (uiConfig.actions || []).forEach(action => {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn';
+            btn.textContent = action.label;
+            btn.addEventListener('click', () => submitAction(action.value));
+            els.actionButtons.appendChild(btn);
+        });
+
+        window.setupScene(uiConfig);
+        els.restartBtn.addEventListener('click', restartGame);
+        nextRound();
+    }
+
+    function difficultyState() {
+        // Difficulty scales with streak, not with a fixed level number --
+        // the generator (in script_bridged.js) decides what that means
+        // per template (e.g. ages closer to the threshold, more stacked
+        // violations, more duplicate-ID lookalikes).
+        return { streak, roundsCleared };
+    }
+
+    function nextRound() {
+        currentCustomer = window.generateCustomer(difficultyState());
+        window.renderCustomer(currentCustomer);
+        els.flashOverlay.className = '';
+        els.roundExplanation.textContent = '';
+        awaitingAnswer = true;
+        setButtonsDisabled(false);
+    }
+
+    function setButtonsDisabled(disabled) {
+        Array.from(els.actionButtons.children).forEach(b => b.disabled = disabled);
+    }
+
+    async function submitAction(actionValue) {
+        if (!awaitingAnswer) return;
+        awaitingAnswer = false;
+        setButtonsDisabled(true);
+
+        let result;
+        try {
+            const res = await fetch(`/api/evaluate/${algoKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    live_state: { customer: currentCustomer },
+                    proposed_action: actionValue,
+                }),
+            });
+            result = await res.json();
+        } catch (err) {
+            console.error(err);
+            els.roundExplanation.textContent = 'Connection error -- try again.';
+            awaitingAnswer = true;
+            setButtonsDisabled(false);
+            return;
+        }
+
+        window.resolveRound(currentCustomer, result);
+        els.roundExplanation.textContent = result.explanation || '';
+
+        if (result.correct) {
+            streak++;
+            bestStreak = Math.max(bestStreak, streak);
+            roundsCleared++;
+            const multiplier = streak >= 5 ? 2 : (streak >= 3 ? 1.5 : 1);
+            score += Math.round(10 * multiplier);
+            els.flashOverlay.className = 'correct';
+        } else {
+            mistakes++;
+            streak = 0;
+            els.flashOverlay.className = 'wrong';
+        }
+
+        els.streakStat.textContent = `STREAK ${streak}`;
+        els.scoreStat.textContent = `SCORE ${score}`;
+
+        if (mistakes >= MISTAKES_ALLOWED) {
+            setTimeout(endGame, ROUND_ADVANCE_DELAY_MS);
+        } else {
+            setTimeout(nextRound, ROUND_ADVANCE_DELAY_MS);
+        }
+    }
+
+    function endGame() {
+        window.clearScene();
+        els.gameOverSummary.textContent =
+            `Cleared ${roundsCleared} · best streak ${bestStreak} · score ${score}`;
+        els.gameOverPanel.style.display = 'block';
+    }
+
+    function restartGame() {
+        streak = 0;
+        bestStreak = 0;
+        score = 0;
+        mistakes = 0;
+        roundsCleared = 0;
+        els.streakStat.textContent = 'STREAK 0';
+        els.scoreStat.textContent = 'SCORE 0';
+        els.gameOverPanel.style.display = 'none';
+        window.setupScene(uiConfig);
+        nextRound();
+    }
+</script>
+</body>
+</html>

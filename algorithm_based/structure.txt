@@ -1,0 +1,66 @@
+.
+├── algorithms.json
+├── app.py
+├── generate_game.py
+├── generated_strategies
+│   ├── simulate_pacman_a_star_heuristic_evaluation.py
+│   └── simulate_pacman_a_star_heuristic_evaluation.tests.json
+├── structure.txt
+└── templates
+    ├── __pycache__
+    │   └── engine.cpython-313.pyc
+    ├── _dashboard_scaffold.html
+    ├── agent_memory
+    │   ├── 30679bdc-63d3-4519-8455-fb52ad16edb2
+    │   │   ├── data_level0.bin
+    │   │   ├── header.bin
+    │   │   ├── length.bin
+    │   │   └── link_lists.bin
+    │   ├── 51c0390d-d88c-4ebc-972f-dd5b8b4a1970
+    │   │   ├── data_level0.bin
+    │   │   ├── header.bin
+    │   │   ├── length.bin
+    │   │   └── link_lists.bin
+    │   ├── c3651322-279d-46d2-a52e-6505e469d39b
+    │   │   ├── data_level0.bin
+    │   │   ├── header.bin
+    │   │   ├── length.bin
+    │   │   └── link_lists.bin
+    │   └── chroma.sqlite3
+    ├── chatbot.html
+    ├── dashboard.html
+    ├── engine.py
+    └── games
+        ├── crossy_road
+        │   ├── ai-fundamentals.json
+        │   ├── index.html
+        │   ├── index.json
+        │   ├── script.js
+        │   ├── sorting-and-searching.json
+        │   └── style.css
+        ├── dice_roll_simulator_amortized_rerender
+        │   ├── dice_roll_simulator_amortized_rerender_trace.json
+        │   ├── index.html
+        │   ├── script_bridged.js
+        │   └── ui_config.json
+        ├── pacman_a_star_lesson_a_star
+        │   ├── index.html
+        │   ├── pacman_a_star_lesson_a_star_trace.json
+        │   ├── script_bridged.js
+        │   └── ui_config.json
+        ├── pong
+        │   ├── generate_frontend.py
+        │   ├── index.html
+        │   ├── pong_binary_search_interception_trace.json
+        │   ├── script.js
+        │   ├── script_bridged.js
+        │   └── style.css
+        └── tetris
+            ├── generate_frontend.py
+            ├── index.html
+            ├── script.js
+            ├── script_bridged.js
+            ├── style.css
+            └── tetris_best_fit_trace.json
+
+14 directories, 50 files

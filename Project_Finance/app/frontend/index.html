@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finance Forecaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-inner">
+    <div>
+      <h1>Finance Forecaster</h1>
+      <p>From raw statements to explainable decisions</p>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-ghost" id="btn-demo">Load demo data</button>
+      <button class="btn-primary" id="btn-new">Import statement</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div id="banner" class="banner hidden"></div>
+
+  <!-- ---------------- UPLOAD ---------------- -->
+  <section id="view-upload" class="upload-section">
+    <div class="card">
+      <h3>Start your analysis</h3>
+      <p class="muted">Upload a bank statement CSV. Columns are detected automatically —
+        <code>Date/Description/Amount</code> and <code>Date/Memo/Debit/Credit</code> both work.</p>
+
+      <form id="upload-form">
+        <div class="file-drop-area" id="drop">
+          <input type="file" class="file-input" id="file" accept=".csv" required>
+          <strong id="drop-label">Choose file</strong>
+          <span class="muted block">or drag and drop here</span>
+        </div>
+        <button class="btn-primary" type="submit">Generate report</button>
+      </form>
+
+      <div class="education-box">
+        <h4>What happens to my data?</h4>
+        Parsing runs in memory for the session only and nothing is written to disk.
+        Analytics records event names and counts — never descriptions, merchants, amounts or balances.
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- DASHBOARD ---------------- -->
+  <section id="view-dash" class="hidden">
+    <div class="layout">
+      <aside class="sidenav">
+        <button class="nav-item active" data-tab="overview">Overview</button>
+        <button class="nav-item" data-tab="transactions">Transactions</button>
+        <button class="nav-item" data-tab="forecast">Forecast</button>
+        <button class="nav-item" data-tab="recurring">Recurring</button>
+        <button class="nav-item" data-tab="affordability">Affordability</button>
+        <button class="nav-item" data-tab="simulations">Simulations</button>
+        <button class="nav-item" data-tab="anomalies">Unusual activity</button>
+        <div class="sidenav-foot">
+          <label class="label">Liquid savings</label>
+          <div class="inline">
+            <input type="number" id="balance-input" min="0" step="100" placeholder="e.g. 14200">
+            <button class="btn-ghost sm" id="btn-balance">Set</button>
+          </div>
+          <p class="tiny muted" id="balance-source"></p>
+        </div>
+      </aside>
+
+      <main class="tabs">
+
+        <!-- OVERVIEW -->
+        <div class="tab active" id="tab-overview">
+          <div class="card score-card">
+            <div class="card-header">
+              <h3>Financial health</h3>
+              <span class="badge" id="health-band">—</span>
+            </div>
+            <div class="score-hero">
+              <div class="dti-score" id="health-score">—</div>
+              <div class="score-bar"><div class="score-fill" id="health-fill"></div></div>
+            </div>
+            <div id="health-components" class="component-grid"></div>
+            <details>
+              <summary>How is this calculated?</summary>
+              <div class="education-box" id="health-explain"></div>
+            </details>
+          </div>
+
+          <div class="metric-strip" id="metric-strip"></div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>90-day cash-flow forecast</h3>
+              <span class="badge" id="forecast-method">—</span>
+            </div>
+            <canvas id="chart-forecast" height="110"></canvas>
+            <div id="forecast-summary" class="forecast-summary"></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Where the money goes</h3>
+              <canvas id="chart-categories" height="200"></canvas>
+            </div>
+            <div class="card">
+              <h3>Recent insights</h3>
+              <ul class="insight-list" id="insight-list"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRANSACTIONS -->
+        <div class="tab" id="tab-transactions">
+          <div class="card">
+            <div class="card-header">
+              <h3>Transactions</h3>
+              <div class="inline">
+                <input id="txn-search" placeholder="Search merchant…">
+                <label class="checkline"><input type="checkbox" id="txn-review"> Needs review only</label>
+              </div>
+            </div>
+            <div class="table-wrap"><table class="data-table" id="txn-table"></table></div>
+            <div class="pager">
+              <button class="btn-ghost sm" id="txn-prev">Previous</button>
+              <span id="txn-range" class="muted tiny"></span>
+              <button class="btn-ghost sm" id="txn-next">Next</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FORECAST -->
+        <div class="tab" id="tab-forecast">
+          <div class="card">
+            <div class="card-header"><h3>Horizon detail</h3><span class="badge" id="fc-conf">80% interval</span></div>
+            <div id="horizon-cards" class="component-grid"></div>
+            <details><summary>Assumptions</summary><div class="education-box" id="fc-assumptions"></div></details>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3>Backtest — walk-forward validation</h3>
+              <button class="btn-ghost sm" id="btn-backtest">Run backtest</button>
+            </div>
+            <p class="muted tiny">Trains on months 1..n, predicts n+1, advances, repeats.
+              Model MAE is shown against a naive "next month equals last month" baseline —
+              a forecast that cannot beat the baseline is not adding value.</p>
+            <div class="table-wrap"><table class="data-table" id="backtest-table"></table></div>
+            <div id="backtest-notes"></div>
+          </div>
+        </div>
+
+        <!-- RECURRING -->
+        <div class="tab" id="tab-recurring">
+          <div class="card">
+            <div class="card-header"><h3>Recurring commitments</h3><span class="badge" id="rec-total">—</span></div>
+            <div id="rec-summary" class="component-grid"></div>
+            <div class="table-wrap"><table class="data-table" id="rec-table"></table></div>
+          </div>
+        </div>
+
+        <!-- AFFORDABILITY -->
+        <div class="tab" id="tab-affordability">
+          <div class="grid-2-bias">
+            <div class="card">
+              <h3>Can I afford this?</h3>
+              <form id="afford-form" class="form-grid">
+                <label>Goal <input id="af-goal" value="New Car"></label>
+                <label>Purchase price <input type="number" id="af-amount" value="35000" min="1" step="500"></label>
+                <label>Down payment <input type="number" id="af-down" value="5000" min="0" step="500"></label>
+                <label>Interest rate % <input type="number" id="af-rate" value="6.9" min="0" step="0.1"></label>
+                <label>Term (months) <input type="number" id="af-term" value="60" min="1" step="6"></label>
+                <label>Added monthly cost <input type="number" id="af-extra" value="150" min="0" step="25"></label>
+                <label>Target score <input type="number" id="af-target" value="80" min="0" max="100"></label>
+                <button class="btn-primary" type="submit">Evaluate</button>
+              </form>
+            </div>
+            <div class="card" id="afford-result">
+              <p class="muted">Run an evaluation to see the score breakdown and the levers that would improve it.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIMULATIONS -->
+        <div class="tab" id="tab-simulations">
+          <div class="card">
+            <div class="card-header">
+              <h3>Monte Carlo outlook</h3>
+              <div class="inline">
+                <input type="number" id="mc-months" value="12" min="1" max="60" title="Months">
+                <input type="number" id="mc-goal" placeholder="Savings goal" step="1000">
+                <button class="btn-primary sm" id="btn-mc">Run 10,000 paths</button>
+              </div>
+            </div>
+            <canvas id="chart-mc" height="130"></canvas>
+            <div id="mc-summary" class="component-grid"></div>
+            <details><summary>Assumptions</summary><div class="education-box" id="mc-assumptions"></div></details>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Stress tests</h3>
+              <button class="btn-ghost sm" id="btn-stress">Run all scenarios</button></div>
+            <div id="stress-grid" class="component-grid"></div>
+          </div>
+        </div>
+
+        <!-- ANOMALIES -->
+        <div class="tab" id="tab-anomalies">
+          <div class="card">
+            <div class="card-header"><h3>Unusual transactions</h3><span class="badge" id="anom-count">—</span></div>
+            <div class="education-box">
+              These are statistical outliers against <em>your own</em> history — not verified fraud.
+              No labelled fraud data is used and no fraud claim is made.
+            </div>
+            <div id="anom-list"></div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </section>
+</div>
+
+<div id="loader" class="loader hidden"><div class="spinner"></div><span id="loader-text">Working…</span></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
