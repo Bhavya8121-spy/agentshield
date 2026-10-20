@@ -1,14 +1,30 @@
-"""Oracle connectivity and synthetic fixture seeding."""
 import json
 import os
 from pathlib import Path
+
 import oracledb
 from dotenv import load_dotenv
 
 load_dotenv()
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+WALLET_DIR = PROJECT_ROOT / "wallet"
+
+
 def connect():
-    return oracledb.connect(user=os.environ['DB_USER'], password=os.environ['DB_PASSWORD'], dsn=os.environ['DB_DSN'])
+    if not WALLET_DIR.exists():
+        raise FileNotFoundError(
+            f"Oracle wallet directory not found: {WALLET_DIR}"
+        )
+
+    return oracledb.connect(
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        dsn=os.environ["DB_DSN"],
+        config_dir=str(WALLET_DIR),
+        wallet_location=str(WALLET_DIR),
+        wallet_password=os.environ["WALLET_PASSWORD"],
+    )
 
 def seed_fixtures():
     path = Path(__file__).resolve().parents[1] / 'fixtures' / 'tickets.json'
