@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AgentShield: a checkpoint for your AI assistant</title>
+<title>AgentShield | A checkpoint for your AI assistant</title>
+<link rel="icon" type="image/svg+xml" href="/assets/agentshield-app-icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,12 +90,16 @@ footer{padding:40px 0 56px;color:var(--muted);font-size:14px;border-top:1px soli
 .sdk-steps span{border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);font-size:13px}
 .sdk-details{margin-top:16px}
 .sdk-details summary{cursor:pointer;font-weight:600}
+/* Brand assets: preserve aspect ratio and mobile header spacing */
+.brand-link{display:inline-flex;align-items:center;min-width:0;text-decoration:none}
+.brand-logo{display:block;width:180px;height:auto;max-width:100%}
+@media(max-width:440px){.brand-logo{width:145px}header{gap:12px}header .btn{font-size:14px;padding:9px 12px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="logo">AgentShield</div>
+    <a class="brand-link" href="/" aria-label="AgentShield home"><img class="brand-logo" src="/assets/agentshield-logo-horizontal.svg" alt="AgentShield" width="180" height="43"></a>
     <a class="btn" href="#start">Try it now</a>
   </header>
 

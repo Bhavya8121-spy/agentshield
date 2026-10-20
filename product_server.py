@@ -100,6 +100,20 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
             self.end_headers()
             self.wfile.write(raw)
+        elif self.path in (
+            '/assets/agentshield-logo-horizontal.svg',
+            '/assets/agentshield-mark.svg',
+            '/assets/agentshield-app-icon.svg',
+        ):
+            asset = ROOT / 'web' / self.path.lstrip('/')
+            raw = asset.read_bytes()
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/svg+xml')
+            self.send_header('Content-Length', str(len(raw)))
+            self.send_header('Cache-Control', 'public, max-age=3600')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.end_headers()
+            self.wfile.write(raw)
         elif self.path == '/api/health':
             self.respond(200, {'status': 'ok', 'mode': 'isolated-demo'})
         else:
