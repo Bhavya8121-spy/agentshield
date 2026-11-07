@@ -1,4 +1,0 @@
-oracledb>=2.0,<4
-python-dotenv>=1,<2
-pydantic>=2,<3
-pytest>=8,<10

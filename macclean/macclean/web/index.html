@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="macclean-token" content="{{TOKEN}}">
+  <title>macclean</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B9%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="shell">
+
+    <!-- ============ Sidebar ============ -->
+    <aside class="side">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🧹</span>
+        <span class="brand-name">macclean</span>
+        <span class="ver" id="ver"></span>
+      </div>
+
+      <nav class="tabs" role="tablist" aria-label="Sections" aria-orientation="vertical">
+        <button role="tab" data-tab="overview" aria-selected="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg>
+          <span>Storage</span>
+        </button>
+        <button role="tab" data-tab="largest" aria-selected="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span>Largest files</span>
+        </button>
+        <button role="tab" data-tab="health" aria-selected="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+          <span>Health check</span>
+        </button>
+        <button role="tab" data-tab="help" aria-selected="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 10 3 2-3 2M12 15h5"/></svg>
+          <span>Commands &amp; safety</span>
+        </button>
+      </nav>
+
+      <div class="side-foot">
+        <button class="theme-btn" id="theme-btn" type="button" title="Switch between automatic, light and dark">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" class="half"/></svg>
+          <span id="theme-label">Theme: Auto</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============ Main ============ -->
+    <main class="content">
+
+      <!-- ============ Storage ============ -->
+      <section id="tab-overview" role="tabpanel">
+        <header class="page-head">
+          <h1>Storage</h1>
+          <p class="muted">See what is taking up space, then choose what to clear.</p>
+        </header>
+
+        <div class="card hero" id="disk" hidden>
+          <div class="hero-side">
+            <div class="hero-label">Used</div>
+            <div class="hero-value" id="disk-used"></div>
+            <div class="muted small" id="disk-total"></div>
+          </div>
+
+          <div class="ring" role="img" aria-label="Disk usage" id="ring">
+            <svg viewBox="0 0 220 220" aria-hidden="true">
+              <defs>
+                <linearGradient id="g-main" gradientUnits="userSpaceOnUse" x1="20" y1="200" x2="200" y2="20">
+                  <stop offset="0" class="stop-a"/>
+                  <stop offset="1" class="stop-b"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-track" cx="110" cy="110" r="94" fill="none" stroke-width="16"/>
+              <circle class="ring-fill" id="ring-fill" cx="110" cy="110" r="94" fill="none" stroke-width="16"
+                      stroke-linecap="round" stroke="url(#g-main)" transform="rotate(-90 110 110)"
+                      stroke-dasharray="590.62" stroke-dashoffset="590.62"/>
+              <circle class="ring-inner" cx="110" cy="110" r="74" fill="none" stroke-width="3"/>
+            </svg>
+            <div class="ring-text">
+              <div class="ring-pct" id="ring-pct">–</div>
+              <div class="muted small">used</div>
+            </div>
+          </div>
+
+          <div class="hero-side right">
+            <div class="hero-label">Free</div>
+            <div class="hero-value" id="disk-free"></div>
+            <div class="muted small" id="disk-note"></div>
+          </div>
+        </div>
+
+        <div class="card scan-card">
+          <div class="scan-top">
+            <div class="scan-summary">
+              <div class="scan-title">Scan summary</div>
+              <div class="muted" id="scan-summary">Not scanned yet</div>
+            </div>
+            <label class="check"><input type="checkbox" id="deep"> <span>Deep scan <span class="muted">(finds stale <code>node_modules</code>, slower)</span></span></label>
+            <button class="btn primary big" id="scan-btn">Scan</button>
+          </div>
+          <div class="chips-wrap">
+            <span class="muted small">Limit to</span>
+            <div class="chips" id="chips" role="group" aria-label="Categories"></div>
+          </div>
+          <p class="muted small" id="scan-hint">Scanning only reads your disk. Nothing is changed until you choose items and confirm.</p>
+        </div>
+
+        <div id="results" hidden>
+          <div class="stats" id="stats"></div>
+
+          <div class="card flush list-card">
+            <div class="table-tools">
+              <div class="tools-title">Items found</div>
+              <div class="tools-btns">
+                <button class="btn small" id="sel-safe">Select all safe</button>
+                <button class="btn small" id="sel-none">Clear selection</button>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="items">
+                <thead>
+                  <tr><th class="c-check"><span class="sr">Select</span></th><th>Item</th><th class="num">Size</th><th class="c-status">Status</th></tr>
+                </thead>
+                <tbody id="rows"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="scan-errors"></div>
+        </div>
+
+        <div class="actionbar" id="actionbar" hidden>
+          <div class="bar-inner">
+            <div class="bar-text" id="bar-text"></div>
+            <div class="bar-btns">
+              <button class="btn" id="dry-btn">Dry run</button>
+              <button class="btn danger" id="del-btn">Delete selected…</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Largest files ============ -->
+      <section id="tab-largest" role="tabpanel" hidden>
+        <header class="page-head">
+          <h1>Largest files</h1>
+          <p class="muted">Find big files hiding in your home folder.</p>
+        </header>
+        <div class="card">
+          <div class="row wrap-row">
+            <label class="field">Folder
+              <input type="text" id="lg-path" value="~" spellcheck="false" autocomplete="off">
+            </label>
+            <label class="field narrow">How many
+              <input type="number" id="lg-n" value="20" min="1" max="200">
+            </label>
+            <label class="field narrow">Min size (MB)
+              <input type="number" id="lg-min" value="100" min="0">
+            </label>
+            <button class="btn primary" id="lg-btn">Find large files</button>
+          </div>
+          <p class="muted small">Report only. macclean never deletes these. Only folders inside your home folder can be searched.</p>
+        </div>
+        <div class="card flush" id="lg-card" hidden>
+          <div class="table-scroll">
+            <table class="items">
+              <thead><tr><th class="num">Size</th><th>File</th><th><span class="sr">Actions</span></th></tr></thead>
+              <tbody id="lg-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Health ============ -->
+      <section id="tab-health" role="tabpanel" hidden>
+        <header class="page-head">
+          <h1>Health check</h1>
+          <p class="muted">Confirms the tools and permissions macclean needs.</p>
+        </header>
+        <div class="card flush">
+          <div class="table-scroll">
+            <table class="items">
+              <thead><tr><th>Check</th><th>Status</th><th>Notes</th></tr></thead>
+              <tbody id="health-rows"></tbody>
+            </table>
+          </div>
+        </div>
+        <p><button class="btn" id="health-btn">Re-check</button></p>
+      </section>
+
+      <!-- ============ Help ============ -->
+      <section id="tab-help" role="tabpanel" hidden>
+        <header class="page-head">
+          <h1>Commands &amp; safety</h1>
+          <p class="muted">What each safety level means, and the Terminal equivalents.</p>
+        </header>
+        <div class="card">
+          <h2>Safety levels</h2>
+          <ul class="legend">
+            <li><span class="badge safe">✓ Safe</span> Regenerable build and package caches. Preselected for you.</li>
+            <li><span class="badge review">! Review</span> Probably fine, but look first (Trash, app caches, Docker build cache). Never preselected.</li>
+            <li><span class="badge danger">✗ Dangerous</span> Could lose real data (Docker volumes). Shown, never cleaned.</li>
+          </ul>
+          <p class="muted small">Some items are <em>report only</em> (Xcode Archives, simulators, stale <code>node_modules</code>, large files). macclean shows them but cannot delete them. Everything it does delete is checked against a list of protected folders (Documents, Desktop, Downloads, Photos, iCloud Drive, keychains, and more).</p>
+        </div>
+
+        <div class="card">
+          <h2>Terminal commands</h2>
+          <p class="muted small">The same things you can do here, from Terminal. Click to copy.</p>
+          <div id="commands" class="commands"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="modal"><div id="modal-body" class="modal-body"></div></dialog>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

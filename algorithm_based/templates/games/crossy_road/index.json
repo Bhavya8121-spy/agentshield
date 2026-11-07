@@ -1,6 +1,0 @@
-{
-  "algorithms": [
-    { "id": "ai-fundamentals", "file": "ai-fundamentals.json" },
-    { "id": "sorting-and-searching", "file": "sorting-and-searching.json" }
-  ]
-}
