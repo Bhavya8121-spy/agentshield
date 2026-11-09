@@ -1,6 +1,7 @@
 <div align="center">
 
 #  AgentShield
+Check out live [AgentShield](https://agentshield-labs.streamlit.app/).
 
 ### A checkpoint for AI-generated actions.
 
