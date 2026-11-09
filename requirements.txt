@@ -2,3 +2,5 @@ oracledb>=2.0,<4
 python-dotenv>=1,<2
 pydantic>=2,<3
 pytest>=8,<10
+streamlit>=1.40.0
+pandas>=2.0.0
