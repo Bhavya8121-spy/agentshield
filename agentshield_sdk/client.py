@@ -5,6 +5,7 @@ actors and fetch resource ownership from its own trusted storage.
 """
 from dataclasses import dataclass
 import json
+from typing import Any
 from urllib import request, error, parse
 
 
@@ -18,6 +19,19 @@ class Decision:
     reason: str
     tool: str = ''
     demo_only: bool = False
+
+
+@dataclass(frozen=True)
+class AgentOutputResult:
+    """Verdict on one agent response (which may contain several tool calls)."""
+    overall: str            # 'ALLOW' | 'DENY' | 'PARTIAL'
+    decisions: tuple        # one Decision per tool call, in order
+    layers: tuple = ()      # which layer decided each call: 'intent' | 'policy' | 'parser'
+
+    @property
+    def allowed(self):
+        """True only if EVERY proposed call was allowed (fail-closed)."""
+        return self.overall == 'ALLOW'
 
 
 PERMISSIONS = {
@@ -75,3 +89,39 @@ class AgentShield:
         if role not in PERMISSIONS or not isinstance(proposal, str) or not proposal.strip() or len(proposal) > 3000:
             raise ValueError('Invalid demo proposal')
         return self._post('/api/paste-check', {'role': role, 'proposal': proposal})
+
+    def check_agent_output(self, payload: Any, *, role, user_request=None, domain=None):
+        """Bring your own agent: send the raw tool-call output of ANY agent for a verdict.
+
+        `payload` may be the provider response (OpenAI, Anthropic, Gemini), a generic
+        {"tool": ..., "arguments": ...} dict, a list of those, or a JSON string. Only this
+        output is sent; your agent, API keys and data are never contacted by AgentShield.
+        Pass `user_request` (what the human asked) to also enable the intent guard.
+        Checks run against the synthetic demo sandbox, not your real systems.
+        """
+        if role not in PERMISSIONS:
+            raise ValueError('Invalid role')
+        body = {'role': role, 'payload': payload}
+        if user_request is not None:
+            body['user_request'] = user_request
+        if domain is not None:
+            body['domain'] = domain    # 'email' or 'ticket' (server default)
+        data = json.dumps(body, separators=(',', ':')).encode('utf-8')
+        if len(data) > 16384:
+            raise ValueError('Request exceeds demo limit (16 KB)')
+        req = request.Request(self.base_url + '/api/v1/check', data=data,
+                              headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
+                              method='POST')
+        try:
+            with request.urlopen(req, timeout=self.timeout) as response:
+                result = json.load(response)
+        except error.HTTPError as exc:
+            raise AgentShieldError(f'AgentShield rejected the request (HTTP {exc.code})') from exc
+        except (error.URLError, ValueError, OSError) as exc:
+            raise AgentShieldError('AgentShield service unavailable') from exc
+        calls = result.get('calls') if type(result) is dict else None
+        if type(calls) is not list or result.get('overall') not in ('ALLOW', 'DENY', 'PARTIAL'):
+            raise AgentShieldError('Invalid AgentShield response')
+        decisions = tuple(Decision(c.get('allowed') is True, str(c.get('reason', '')), str(c.get('tool', '')), True)
+                          for c in calls)
+        return AgentOutputResult(result['overall'], decisions, tuple(str(c.get('layer', '')) for c in calls))

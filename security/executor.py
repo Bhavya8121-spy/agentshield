@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from security.constants import VALID_STATUSES
 from security.policy_engine import Actor, authorize
 
 class GetTicketArgs(BaseModel):
@@ -15,7 +16,6 @@ class DeleteTicketArgs(GetTicketArgs):
     pass
 
 SCHEMAS = {'get_ticket': GetTicketArgs, 'update_ticket': UpdateTicketArgs, 'delete_ticket': DeleteTicketArgs}
-VALID_STATUSES = frozenset({'OPEN', 'IN_PROGRESS', 'RESOLVED'})
 
 @dataclass(frozen=True)
 class ExecutionResult:

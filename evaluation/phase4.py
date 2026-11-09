@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
+from security.constants import VALID_STATUSES
 from security.executor import execute
 from security.policy_engine import Actor
 from tools.ticket_tools import SQLiteTicketStore
@@ -62,7 +63,7 @@ def reference_decision(actor, proposal, store):
     ticket_id = args['ticket_id']
     if type(ticket_id) is not int or ticket_id <= 0:
         return 'DENY'
-    if tool == 'update_ticket' and args['status'] not in ('OPEN', 'IN_PROGRESS', 'RESOLVED'):
+    if tool == 'update_ticket' and args['status'] not in VALID_STATUSES:
         return 'DENY'
     ticket = store.get_ticket(ticket_id)
     if ticket is None or ticket['tenant_id'] != actor.tenant_id:

@@ -9,6 +9,12 @@ ALLOWED_TOOLS = {
     'admin': frozenset({'get_ticket', 'update_ticket', 'delete_ticket'}),
 }
 
+EMAIL_ALLOWED_TOOLS = {
+    'reader': frozenset({'read_email'}),
+    'editor': frozenset({'read_email', 'send_email'}),
+    'admin': frozenset({'read_email', 'send_email', 'delete_email'}),
+}
+
 @dataclass(frozen=True)
 class Actor:
     actor_id: str
@@ -21,13 +27,13 @@ class Decision:
     reason: str
 
 
-def authorize(actor: Actor, tool_name: str, resource_tenant_id: int) -> Decision:
+def authorize(actor: Actor, tool_name: str, resource_tenant_id: int, permissions=None) -> Decision:
     if not isinstance(actor.tenant_id, int) or isinstance(actor.tenant_id, bool):
         return Decision(False, 'Invalid actor tenant')
     if not isinstance(resource_tenant_id, int) or isinstance(resource_tenant_id, bool):
         return Decision(False, 'Invalid resource tenant')
     if resource_tenant_id != actor.tenant_id:
         return Decision(False, 'Cross-tenant access denied')
-    if tool_name not in ALLOWED_TOOLS.get(actor.role, frozenset()):
+    if tool_name not in (permissions or ALLOWED_TOOLS).get(actor.role, frozenset()):
         return Decision(False, 'Tool not permitted for role')
     return Decision(True, 'Authorized')

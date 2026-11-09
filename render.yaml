@@ -9,3 +9,9 @@ services:
         value: 0.0.0.0
       - key: PORT
         value: 8765
+      # To enable the live-model option set AGENTSHIELD_LIVE=1 plus EITHER
+      #   GEMINI_API_KEY (optional GEMINI_MODEL), added as a secret in the Render dashboard, OR
+      #   OCI_COMPARTMENT_OCID, OCI_GENAI_MODEL_ID, OCI_GENAI_ENDPOINT and OCI credentials.
+      # Default is mock-only.
+      - key: AGENTSHIELD_LIVE
+        value: '1'

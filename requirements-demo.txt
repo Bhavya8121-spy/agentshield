@@ -1,0 +1,2 @@
+# Minimal runtime dependencies for the public demo image (no Oracle, no OCI).
+pydantic>=2,<3
