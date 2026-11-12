@@ -339,7 +339,7 @@ flowchart TD
 
 ---
 
-## 📊 Evaluation & evidence
+## Evaluation & evidence
 
 Keep **synthetic replay** and **live model** results separate:
 
