@@ -3,7 +3,7 @@
 #  AgentShield
 Check out live [AgentShield](https://agentshield-labs.streamlit.app/).
 
-### A checkpoint for AI-generated actions.
+### A checkpoint for AI-generated actions live on this site.
 
 **Check what an AI assistant wants to do. Enforce permissions before anything happens.**
 
