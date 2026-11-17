@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AgentShield | AI Action Policy Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#091a16;--surface:#102620;--ink:#edf9f1;--muted:#acc6b8;--line:#2e4e40;
+  --accent:#a3efbd;--ok:#a3efbd;--ok-bg:#183b2c;--bad:#ffa48e;--bad-bg:#3d2520;
+  color-scheme:dark;box-sizing:border-box;scroll-padding-top:20px;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Instrument Sans",system-ui,sans-serif}
+::selection{background:var(--accent);color:var(--bg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{max-width:1120px;margin:auto;padding-inline:clamp(18px,4vw,48px)}
+header,footer{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap}
+header{padding:21px 0;border-bottom:1px solid var(--line)}
+footer{border-top:1px solid var(--line);padding:22px 0 36px;font-size:14px;color:var(--muted)}
+a{color:var(--accent);text-underline-offset:3px}
+.brand-link{display:inline-flex;align-items:center;gap:9px;color:var(--ink);font-size:20px;font-weight:700;text-decoration:none}
+.brand-link svg{color:var(--accent)}
+.sandbox-label{color:var(--muted);font-size:14px}
+.hero{padding:clamp(25px,5vw,55px) 0 26px}
+.hero h1{font-size:clamp(36px,5.8vw,66px);line-height:1.04;letter-spacing:-.04em;max-width:20ch;text-wrap:balance;margin:0 0 14px}
+.hero p{margin:0;max-width:62ch;color:var(--muted)}
+label{display:block;font-size:14px;color:var(--muted)}
+.check-field{display:block;width:100%;margin:5px 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit}
+.btn,.receipt-button{padding:10px 16px;border:1px solid transparent;border-radius:7px;font:inherit;font-weight:600}
+.btn{background:var(--accent);color:var(--bg)}
+.btn:hover:not(:disabled){background:#c4f8d4}
+.btn:disabled{opacity:.55;cursor:wait}
+.receipt-button{background:none;color:var(--accent);border-color:var(--line);cursor:pointer;font-size:14px}
+.receipt-button:hover{border-color:var(--accent)}
+#workflows{padding-bottom:32px}
+.workflow-layout{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.workflow-controls,.workflow-output{min-width:0;padding:clamp(16px,3vw,26px)}
+.workflow-output{border-left:1px solid var(--line);background:var(--bg);border-radius:0 12px 12px 0}
+.workflow-controls .btn{border:0;cursor:pointer}
+#workflow-review{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
+.workflow-buttons{display:flex;flex-wrap:wrap;gap:8px}
+#workflow-reject,#workflow-reject:hover:not(:disabled){background:var(--bad-bg);color:var(--bad)}
+.workflow-status{margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:7px}
+.workflow-status[data-verdict="ALLOW"]{color:var(--ok);background:var(--ok-bg)}
+.workflow-status[data-verdict="DENY"]{color:var(--bad);background:var(--bad-bg)}
+.workflow-status[data-verdict="REVIEW"]{color:#f8d38c;background:#342c18}
+.workflow-records:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.workflow-records div{min-width:0}
+#workflow-export{margin-top:14px}
+.workflow-records div:first-child{grid-column:1/-1}
+.workflow-records h3{margin:0 0 4px;font-size:14px}
+.workflow-records pre{margin:0;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;font:12px/1.55 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:790px){
+  .workflow-layout{grid-template-columns:1fr}
+  .workflow-output{border-left:0;border-top:1px solid var(--line);border-radius:0 0 12px 12px}
+}
+@media(max-width:450px){.workflow-records:not([hidden]){grid-template-columns:1fr}}
+.guide{border-top:1px solid var(--line);padding:36px 0}
+.guide h2{font-size:clamp(24px,4vw,34px);letter-spacing:-.025em;margin:0 0 8px}
+.guide p{color:var(--muted);max-width:68ch;margin:0 0 12px}
+.use-cases{margin:22px 0 30px}
+.use-cases div{display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,3fr);gap:5px 18px;padding:13px 0;border-top:1px solid var(--line)}
+.use-cases dt{font-weight:700}
+.use-cases dd{color:var(--muted);margin:0}
+.guide-steps{display:grid;grid-template-columns:1fr 1fr;gap:20px 32px}
+.guide-steps h3{margin:0 0 8px;font-size:18px}
+@media(max-width:600px){.use-cases div,.guide-steps{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap" id="top">
+  <header>
+    <a class="brand-link" href="#top">
+      <svg width="28" height="30" viewBox="0 0 28 30" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2 25 6v8c0 6-4 11-11 14C7 25 3 20 3 14V6zM9 14l4 4 6-7"/>
+      </svg>
+      AgentShield
+    </a>
+    <a class="sandbox-label" href="#guide-title">How to use AgentShield</a>
+  </header>
+
+  <div class="hero">
+    <h1>Decide what your AI can do.</h1>
+    <p>Test how AgentShield allows, blocks, or routes AI actions for approval across five business workflows.</p>
+  </div>
+
+  <section id="workflows" aria-label="Workflow simulator">
+    <div class="workflow-layout">
+      <div class="workflow-controls">
+        <label for="workflow-domain">Use case</label>
+        <select class="check-field" id="workflow-domain" disabled></select>
+        <label for="workflow-scenario">Proposed action</label>
+        <select class="check-field" id="workflow-scenario" disabled></select>
+        <button class="btn" id="workflow-run" type="button" disabled>Run scenario</button>
+        <div id="workflow-review" hidden>
+          <label for="workflow-reviewer">Simulated reviewer</label>
+          <select class="check-field" id="workflow-reviewer">
+            <option value="assigned"></option>
+            <option value="unassigned">Unassigned reviewer</option>
+          </select>
+          <div class="workflow-buttons">
+            <button class="btn" id="workflow-approve" type="button">Approve</button>
+            <button class="btn" id="workflow-reject" type="button">Reject</button>
+          </div>
+        </div>
+      </div>
+      <div class="workflow-output">
+        <p id="workflow-status" class="workflow-status" role="status">Loading scenarios…</p>
+        <div class="workflow-records" id="workflow-records" hidden>
+          <div><h3>Proposal</h3><pre id="workflow-proposal"></pre></div>
+          <div><h3>Before</h3><pre id="workflow-before"></pre></div>
+          <div><h3>After</h3><pre id="workflow-after"></pre></div>
+        </div>
+        <button id="workflow-export" class="receipt-button" type="button" hidden>Download decision receipt</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="guide" aria-labelledby="guide-title">
+    <h2 id="guide-title">Where an action checkpoint helps</h2>
+    <p>Use it at the point where an assistant’s proposal could read sensitive data, change a record, or trigger an operation. The checkpoint can allow routine work, block requests outside the actor’s scope, or send higher-risk actions to a reviewer.</p>
+    <dl class="use-cases">
+      <div><dt>Customer operations</dt><dd>Let a support assistant add notes or route cases within its queue. The same pattern applies to CRM updates and account changes.</dd></div>
+      <div><dt>Commerce and finance</dt><dd>Link a refund to the original order and require approval above a threshold. Similar checks can protect invoice adjustments and credits.</dd></div>
+      <div><dt>Infrastructure</dt><dd>Let an assistant inspect health and open incidents. Route production changes to an on-call reviewer.</dd></div>
+      <div><dt>IT and identity</dt><dd>Let an assistant open an access request. Require an authorized reviewer before it can grant an elevated role.</dd></div>
+      <div><dt>Multi-tenant products</dt><dd>Scope every read and write to the authenticated workspace, even when a shared service can reach records across workspaces.</dd></div>
+    </dl>
+    <div class="guide-steps">
+      <div>
+        <h3>Try it in this sandbox</h3>
+        <p>Choose a use case and proposed action, then run the scenario. Start with the $150 refund to see an action wait for approval. Compare an unassigned reviewer with the payments reviewer, then download the decision receipt.</p>
+      </div>
+      <div>
+        <h3>Integrate the pattern</h3>
+        <p>Put the checkpoint between the assistant and its tools. Your server supplies the authenticated actor and workspace, checks the target record and policy, and executes only an allowed or approved action. Store the outcome with the proposal for later review.</p>
+        <a href="https://github.com/Bhavya8121-spy/agentshield#use-it-from-python">Explore the Python reference implementation</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Browser simulation using fictional records. Run the Python reference implementation for server-side checks.</span>
+    <a href="https://github.com/Bhavya8121-spy/agentshield" target="_blank" rel="noopener noreferrer">View source on GitHub</a>
+  </footer>
+</main>
+
+
+<script>
+(() => {
+  const fixtures = {"scenarios": [{"id": "ticket-read", "domain": "Customer support", "label": "Read a ticket in the assigned queue"}, {"id": "ticket-note", "domain": "Customer support", "label": "Add a support note"}, {"id": "ticket-route", "domain": "Customer support", "label": "Route a ticket to billing"}, {"id": "ticket-delete", "domain": "Customer support", "label": "Try to delete a ticket"}, {"id": "ticket-queue", "domain": "Customer support", "label": "Try to update an unassigned ticket"}, {"id": "ticket-tenant", "domain": "Customer support", "label": "Try to read another workspace’s ticket"}, {"id": "order-read", "domain": "E-commerce and payments", "label": "Look up an order"}, {"id": "shipment-cancel", "domain": "E-commerce and payments", "label": "Cancel an unshipped order’s shipment"}, {"id": "refund-small", "domain": "E-commerce and payments", "label": "Refund $40 to the original order"}, {"id": "refund-large", "domain": "E-commerce and payments", "label": "Request a $150 refund"}, {"id": "refund-mismatch", "domain": "E-commerce and payments", "label": "Try to refund a different order"}, {"id": "service-health", "domain": "Platform engineering", "label": "Inspect checkout service health"}, {"id": "incident-open", "domain": "Platform engineering", "label": "Open an incident for degraded checkout"}, {"id": "restart-stage", "domain": "Platform engineering", "label": "Restart a staging workload"}, {"id": "restart-prod", "domain": "Platform engineering", "label": "Request a production restart"}, {"id": "access-triage", "domain": "IT help desk", "label": "Triage an access request"}, {"id": "access-open", "domain": "IT help desk", "label": "Open an access request"}, {"id": "account-provision", "domain": "IT help desk", "label": "Provision a standard account"}, {"id": "role-grant", "domain": "IT help desk", "label": "Request a privileged role grant"}, {"id": "workspace-read", "domain": "Multi-tenant SaaS", "label": "Read settings in your workspace"}, {"id": "workspace-write", "domain": "Multi-tenant SaaS", "label": "Update settings in your workspace"}, {"id": "workspace-other-read", "domain": "Multi-tenant SaaS", "label": "Try to read another workspace"}, {"id": "workspace-other-write", "domain": "Multi-tenant SaaS", "label": "Try to change another workspace"}], "examples": {"ticket-read": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Read ticket", "resource": "T-1042", "actor_workspace": "Acme"}, "before": {"id": "T-1042", "workspace": "Acme", "queue": "Support", "status": "Open"}, "after": {"id": "T-1042", "workspace": "Acme", "queue": "Support", "status": "Open"}, "executed": true}}, "ticket-note": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Add note", "resource": "T-1042", "actor_workspace": "Acme", "changes": {"note": "Customer verified"}}, "before": {"id": "T-1042", "workspace": "Acme", "queue": "Support", "status": "Open"}, "after": {"id": "T-1042", "workspace": "Acme", "queue": "Support", "status": "Open", "note": "Customer verified"}, "executed": true}}, "ticket-route": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Route ticket", "resource": "T-1042", "actor_workspace": "Acme", "changes": {"queue": "Billing"}}, "before": {"id": "T-1042", "workspace": "Acme", "queue": "Support", "status": "Open"}, "after": {"id": "T-1042", "workspace": "Acme", "queue": "Billing", "status": "Open"}, "executed": true}}, "ticket-delete": {"initial": {"decision": "DENY", "reason": "The support assistant cannot delete tickets.", "reviewer": null, "proposal": {"action": "Delete ticket", "resource": "T-1042", "actor_workspace": "Acme"}, "before": {"id": "T-1042", "workspace": "Acme", "queue": "Support", "status": "Open"}, "after": null, "executed": false}}, "ticket-queue": {"initial": {"decision": "DENY", "reason": "The support assistant is assigned to a different queue.", "reviewer": null, "proposal": {"action": "Add note", "resource": "T-1042", "actor_workspace": "Acme", "changes": {"note": "Follow up"}}, "before": {"id": "T-1042", "workspace": "Acme", "queue": "Billing", "status": "Open"}, "after": null, "executed": false}}, "ticket-tenant": {"initial": {"decision": "DENY", "reason": "The record belongs to another workspace.", "reviewer": null, "proposal": {"action": "Read ticket", "resource": "T-1042", "actor_workspace": "Acme"}, "before": null, "after": null, "executed": false}}, "order-read": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Look up order", "resource": "O-700", "actor_workspace": "Acme"}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "executed": true}}, "shipment-cancel": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Cancel shipment", "resource": "O-700", "actor_workspace": "Acme", "changes": {"shipment": "Cancelled"}}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": {"id": "O-700", "workspace": "Acme", "shipment": "Cancelled", "paid": 300, "refunded": 0}, "executed": true}}, "refund-small": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Refund order", "resource": "O-700", "actor_workspace": "Acme", "refund_order": "O-700", "amount_usd": 40}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 40}, "executed": true}}, "refund-large": {"initial": {"decision": "REVIEW", "reason": "Refunds above $100 require a payments reviewer.", "reviewer": "Payments reviewer", "proposal": {"action": "Refund order", "resource": "O-700", "actor_workspace": "Acme", "refund_order": "O-700", "amount_usd": 150}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": null, "executed": false, "review_id": "refund-large"}, "unassigned": {"decision": "REVIEW", "reason": "This demo reviewer is not authorized for this action.", "reviewer": "Payments reviewer", "review_id": "refund-large", "proposal": {"action": "Refund order", "resource": "O-700", "actor_workspace": "Acme", "refund_order": "O-700", "amount_usd": 150}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": null, "executed": false}, "approved": {"decision": "ALLOW", "reason": "Payments reviewer approved the action.", "reviewer": "Payments reviewer", "review_id": null, "proposal": {"action": "Refund order", "resource": "O-700", "actor_workspace": "Acme", "refund_order": "O-700", "amount_usd": 150}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 150}, "executed": true}, "rejected": {"decision": "DENY", "reason": "Payments reviewer rejected the action.", "reviewer": "Payments reviewer", "review_id": null, "proposal": {"action": "Refund order", "resource": "O-700", "actor_workspace": "Acme", "refund_order": "O-700", "amount_usd": 150}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": null, "executed": false}}, "refund-mismatch": {"initial": {"decision": "DENY", "reason": "Refunds must be applied to the original order.", "reviewer": null, "proposal": {"action": "Refund order", "resource": "O-700", "actor_workspace": "Acme", "refund_order": "O-701", "amount_usd": 40}, "before": {"id": "O-700", "workspace": "Acme", "shipment": "Preparing", "paid": 300, "refunded": 0}, "after": null, "executed": false}}, "service-health": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Inspect service", "resource": "checkout-staging", "actor_workspace": "Acme"}, "before": {"id": "checkout-staging", "workspace": "Acme", "environment": "Staging", "health": "Degraded", "restarts": 0}, "after": {"id": "checkout-staging", "workspace": "Acme", "environment": "Staging", "health": "Degraded", "restarts": 0}, "executed": true}}, "incident-open": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Open incident", "resource": "checkout-staging", "actor_workspace": "Acme", "changes": {"incident": "Open"}}, "before": {"id": "checkout-staging", "workspace": "Acme", "environment": "Staging", "health": "Degraded", "restarts": 0}, "after": {"id": "checkout-staging", "workspace": "Acme", "environment": "Staging", "health": "Degraded", "restarts": 0, "incident": "Open"}, "executed": true}}, "restart-stage": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Restart workload", "resource": "checkout-staging", "actor_workspace": "Acme", "changes": {"restarts": 1, "health": "Healthy"}}, "before": {"id": "checkout-staging", "workspace": "Acme", "environment": "Staging", "health": "Degraded", "restarts": 0}, "after": {"id": "checkout-staging", "workspace": "Acme", "environment": "Staging", "health": "Healthy", "restarts": 1}, "executed": true}}, "restart-prod": {"initial": {"decision": "REVIEW", "reason": "Production restarts require on-call approval.", "reviewer": "On-call engineer", "proposal": {"action": "Restart workload", "resource": "checkout-production", "actor_workspace": "Acme", "changes": {"restarts": 1, "health": "Healthy"}}, "before": {"id": "checkout-production", "workspace": "Acme", "environment": "Production", "health": "Degraded", "restarts": 0}, "after": null, "executed": false, "review_id": "restart-prod"}, "unassigned": {"decision": "REVIEW", "reason": "This demo reviewer is not authorized for this action.", "reviewer": "On-call engineer", "review_id": "restart-prod", "proposal": {"action": "Restart workload", "resource": "checkout-production", "actor_workspace": "Acme", "changes": {"restarts": 1, "health": "Healthy"}}, "before": {"id": "checkout-production", "workspace": "Acme", "environment": "Production", "health": "Degraded", "restarts": 0}, "after": null, "executed": false}, "approved": {"decision": "ALLOW", "reason": "On-call engineer approved the action.", "reviewer": "On-call engineer", "review_id": null, "proposal": {"action": "Restart workload", "resource": "checkout-production", "actor_workspace": "Acme", "changes": {"restarts": 1, "health": "Healthy"}}, "before": {"id": "checkout-production", "workspace": "Acme", "environment": "Production", "health": "Degraded", "restarts": 0}, "after": {"id": "checkout-production", "workspace": "Acme", "environment": "Production", "health": "Healthy", "restarts": 1}, "executed": true}, "rejected": {"decision": "DENY", "reason": "On-call engineer rejected the action.", "reviewer": "On-call engineer", "review_id": null, "proposal": {"action": "Restart workload", "resource": "checkout-production", "actor_workspace": "Acme", "changes": {"restarts": 1, "health": "Healthy"}}, "before": {"id": "checkout-production", "workspace": "Acme", "environment": "Production", "health": "Degraded", "restarts": 0}, "after": null, "executed": false}}, "access-triage": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Triage request", "resource": "R-042", "actor_workspace": "Acme", "changes": {"status": "Needs review"}}, "before": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member"}, "after": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member", "status": "Needs review"}, "executed": true}}, "access-open": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Open access request", "resource": "R-042", "actor_workspace": "Acme", "changes": {"status": "Open"}}, "before": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member"}, "after": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member", "status": "Open"}, "executed": true}}, "account-provision": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Provision account", "resource": "R-042", "actor_workspace": "Acme", "changes": {"account_status": "Provisioned"}}, "before": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member"}, "after": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member", "account_status": "Provisioned"}, "executed": true}}, "role-grant": {"initial": {"decision": "REVIEW", "reason": "Privileged role grants require an authorized access reviewer.", "reviewer": "Access approver", "proposal": {"action": "Grant privileged role", "resource": "R-042", "actor_workspace": "Acme", "changes": {"role": "Administrator"}}, "before": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member"}, "after": null, "executed": false, "review_id": "role-grant"}, "unassigned": {"decision": "REVIEW", "reason": "This demo reviewer is not authorized for this action.", "reviewer": "Access approver", "review_id": "role-grant", "proposal": {"action": "Grant privileged role", "resource": "R-042", "actor_workspace": "Acme", "changes": {"role": "Administrator"}}, "before": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member"}, "after": null, "executed": false}, "approved": {"decision": "ALLOW", "reason": "Access approver approved the action.", "reviewer": "Access approver", "review_id": null, "proposal": {"action": "Grant privileged role", "resource": "R-042", "actor_workspace": "Acme", "changes": {"role": "Administrator"}}, "before": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member"}, "after": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Administrator"}, "executed": true}, "rejected": {"decision": "DENY", "reason": "Access approver rejected the action.", "reviewer": "Access approver", "review_id": null, "proposal": {"action": "Grant privileged role", "resource": "R-042", "actor_workspace": "Acme", "changes": {"role": "Administrator"}}, "before": {"id": "R-042", "workspace": "Acme", "account": "demo-user", "role": "Member"}, "after": null, "executed": false}}, "workspace-read": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Read settings", "resource": "W-10", "actor_workspace": "Acme"}, "before": {"id": "W-10", "workspace": "Acme", "notifications": "Daily"}, "after": {"id": "W-10", "workspace": "Acme", "notifications": "Daily"}, "executed": true}}, "workspace-write": {"initial": {"decision": "ALLOW", "reason": "The action is permitted for this workflow and resource.", "reviewer": null, "proposal": {"action": "Update settings", "resource": "W-10", "actor_workspace": "Acme", "changes": {"notifications": "Weekly"}}, "before": {"id": "W-10", "workspace": "Acme", "notifications": "Daily"}, "after": {"id": "W-10", "workspace": "Acme", "notifications": "Weekly"}, "executed": true}}, "workspace-other-read": {"initial": {"decision": "DENY", "reason": "The record belongs to another workspace.", "reviewer": null, "proposal": {"action": "Read settings", "resource": "W-20", "actor_workspace": "Acme"}, "before": null, "after": null, "executed": false}}, "workspace-other-write": {"initial": {"decision": "DENY", "reason": "The record belongs to another workspace.", "reviewer": null, "proposal": {"action": "Update settings", "resource": "W-20", "actor_workspace": "Acme", "changes": {"notifications": "Weekly"}}, "before": null, "after": null, "executed": false}}}};
+  const pending = new Set();
+  window.agentShieldDemoRequest = async (path, payload) => {
+    if (!path) return {scenarios: fixtures.scenarios};
+    if (path === '/run') {
+      const example = fixtures.examples[payload.scenario];
+      if (!example) throw new Error('Unknown scenario.');
+      const result = example.initial;
+      if (result.review_id) pending.add(result.review_id);
+      return result;
+    }
+    const id = payload.review_id;
+    if (path !== '/review' || !pending.has(id)) throw new Error('Run the scenario again.');
+    const example = fixtures.examples[id];
+    if (payload.reviewer !== 'assigned') return example.unassigned;
+    pending.delete(id);
+    return payload.approve ? example.approved : example.rejected;
+  };
+})();
+</script>
+<script>
+(() => {
+  const get = (name) => document.getElementById('workflow-' + name);
+  const domain = get('domain');
+  const scenario = get('scenario');
+  const run = get('run');
+  const reviewer = get('reviewer');
+  const approve = get('approve');
+  const reject = get('reject');
+  const review = get('review');
+  const status = get('status');
+  const records = get('records');
+  const exportReceipt = get('export');
+  let scenarios = [];
+  let reviewId = null;
+  let receipt = null;
+
+  async function request(path, payload) {
+    if (window.agentShieldDemoRequest) return window.agentShieldDemoRequest(path, payload);
+    const response = await fetch('/api/workflows' + path, payload && {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'The demo could not complete this request.');
+    return data;
+  }
+
+  function message(text, verdict = '') {
+    status.dataset.verdict = verdict;
+    status.textContent = text;
+  }
+
+  function clearResult() {
+    reviewId = null;
+    review.hidden = true;
+    records.hidden = true;
+    exportReceipt.hidden = true;
+    receipt = null;
+    message('Run a scenario to see the decision.');
+  }
+
+  function listScenarios() {
+    scenario.replaceChildren(...scenarios.filter((item) => item.domain === domain.value)
+      .map((item) => new Option(item.label, item.id)));
+    clearResult();
+  }
+
+  function show(data) {
+    const labels = {ALLOW: 'Allowed', DENY: 'Blocked', REVIEW: 'Pending review'};
+    message(labels[data.decision] + ' · ' + data.reason, data.decision);
+    get('proposal').textContent = JSON.stringify(data.proposal, null, 2);
+    get('before').textContent = data.before ? JSON.stringify(data.before, null, 2) : 'Record withheld by workspace policy.';
+    get('after').textContent = data.executed ? JSON.stringify(data.after, null, 2) : 'Action did not run.';
+    records.hidden = false;
+    const {review_id, ...decision} = data;
+    receipt = {sandbox: true, scenario: scenario.value, ...decision};
+    exportReceipt.hidden = false;
+    reviewId = data.review_id;
+    review.hidden = !reviewId;
+    reviewer.options[0].textContent = data.reviewer || 'Assigned reviewer';
+  }
+
+  async function submit(path, payload) {
+    const controls = [domain, scenario, run, reviewer, approve, reject];
+    controls.forEach((control) => { control.disabled = true; });
+    message('Checking…');
+    try {
+      show(await request(path, payload));
+    } catch (error) {
+      message(error.message || 'Unable to reach the demo service.', 'DENY');
+    } finally {
+      controls.forEach((control) => { control.disabled = false; });
+    }
+  }
+
+  exportReceipt.addEventListener('click', () => {
+    if (!receipt) return;
+    const blob = new Blob([JSON.stringify(receipt, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const download = document.createElement('a');
+    download.href = url;
+    download.download = 'agentshield-' + receipt.scenario + '.json';
+    download.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  domain.addEventListener('change', listScenarios);
+  scenario.addEventListener('change', clearResult);
+  run.addEventListener('click', () => {
+    clearResult();
+    reviewer.value = 'assigned';
+    submit('/run', {scenario: scenario.value});
+  });
+  for (const [button, approved] of [[approve, true], [reject, false]]) {
+    button.addEventListener('click', () =>
+      submit('/review', {review_id: reviewId, reviewer: reviewer.value, approve: approved}));
+  }
+  request('').then((data) => {
+    scenarios = data.scenarios;
+    const domains = new Set(scenarios.map((item) => item.domain));
+    domain.replaceChildren(...Array.from(domains, (name) => new Option(name, name)));
+    listScenarios();
+    domain.disabled = scenario.disabled = run.disabled = false;
+  }).catch(() => message('Scenarios could not load. Reload the page to retry.', 'DENY'));
+})();
+</script>
+</body>
+</html>
